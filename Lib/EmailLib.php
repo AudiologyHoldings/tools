@@ -450,6 +450,9 @@ class EmailLib extends CakeEmail {
 		// Security measure to not sent to the actual addressee in debug mode
 		if (Configure::read('debug')) {
 			$adminEmail = Configure::read('Config.adminEmail');
+			if (empty($adminEmail)) {
+				throw new OutOfBoundsException('EmailLib::send() error: Missing Config.adminEmail when debug is set');
+			}
 			foreach ($this->_to as $k => $v) {
 				if ($k === $adminEmail) {
 					continue;
