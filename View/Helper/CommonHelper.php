@@ -27,7 +27,7 @@ class CommonHelper extends AppHelper {
 		}
 		$html = '';
 		if (!empty($messages)) {
-			$html = '<div class="flashMessages">';
+			$html = '<div class="flash-messages flashMessages">';
 
 			if ($types) {
 				foreach ($types as $type) {
@@ -73,7 +73,7 @@ class CommonHelper extends AppHelper {
 	 * @return string HTML
 	 */
 	public function flashMessage($msg, $type = 'info', $escape = true) {
-		$html = '<div class="flashMessages">';
+		$html = '<div class="flash-messages flashMessages">';
 		if ($escape) {
 			$msg = h($msg);
 		}
@@ -101,10 +101,10 @@ class CommonHelper extends AppHelper {
 	 *
 	 * @param string $msg
 	 * @param string $class
-	 * @return bool Success
+	 * @return void
 	 */
 	public function addFlashMessage($msg, $class = null) {
-		return CommonComponent::transientFlashMessage($msg, $class);
+		CommonComponent::transientFlashMessage($msg, $class);
 	}
 
 	/**
@@ -112,11 +112,11 @@ class CommonHelper extends AppHelper {
 	 *
 	 * @param mixed $msg
 	 * @param mixed $class
-	 * @return bool Success
+	 * @return void
 	 * @deprecated Use addFlashMessage() instead
 	 */
 	public function transientFlashMessage($msg, $class = null) {
-		return $this->addFlashMessage($msg, $class);
+		$this->addFlashMessage($msg, $class);
 	}
 
 	/**
@@ -162,7 +162,6 @@ class CommonHelper extends AppHelper {
 
 		return $text;
 	}
-
 
 	/**
 	 * Alternates between two or more strings.

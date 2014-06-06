@@ -259,31 +259,6 @@ class CommonComponent extends Component {
 	}
 
 	/**
-	 * Used to get the value of a named param.
-	 * @deprecated - move to query strings instead
-	 *
-	 * @param mixed $var
-	 * @param mixed $default
-	 * @return mixed
-	 */
-	public function getNamedParam($var, $default = null) {
-		return (isset($this->Controller->request->params['named'][$var])) ? $this->Controller->request->params['named'][$var] : $default;
-	}
-
-	/**
-	 * Used to get the value of a get query.
-	 * @deprecated - use request->query() instead
-	 *
-	 * @param mixed $var
-	 * @param mixed $default
-	 * @return mixed
-	 */
-	public function getQueryParam($var, $default = null) {
-		trigger_error('deprecated - use $this->request->query()');
-		return (isset($this->Controller->request->query[$var])) ? $this->Controller->request->query[$var] : $default;
-	}
-
-	/**
 	 * Returns defaultUrlParams including configured prefixes.
 	 *
 	 * @return array Url params
@@ -449,7 +424,12 @@ class CommonComponent extends Component {
 		}
 
 		if (!$conditionalAutoRedirect || empty($this->Controller->autoRedirectActions) || is_array($referer) && !empty($referer['action'])) {
-			$refererController = Inflector::camelize($referer['controller']);
+			// Be sure that controller offset exists, otherwise you
+			// will run into problems, if you use url rewriting.
+			$refererController = null;
+			if (isset($referer['controller'])) {
+				$refererController = Inflector::camelize($referer['controller']);
+			}
 			// fixme
 			if (!isset($this->Controller->autoRedirectActions)) {
 				$this->Controller->autoRedirectActions = array();
@@ -589,7 +569,7 @@ class CommonComponent extends Component {
 	 * @return void
 	 */
 	public function monitorCookieProblems() {
-		$ip = $this->RequestHandler->getClientIP();
+		$ip = $this->Controller->request->clientIp();
 		$host = gethostbyaddr($ip);
 		$sessionId = session_id();
 		if (empty($sessionId)) {

@@ -46,7 +46,7 @@ class PasswordableBehavior extends ModelBehavior {
 	/**
 	 * @var array
 	 */
-	protected $_defaults = array(
+	protected $_defaultConfig = array(
 		'field' => 'password',
 		'confirm' => true, // Set to false if in admin view and no confirmation (pwd_repeat) is required
 		'require' => true, // If a password change is required (set to false for edit forms, leave it true for pure password update forms)
@@ -234,7 +234,7 @@ class PasswordableBehavior extends ModelBehavior {
 	 * @return void
 	 */
 	public function setup(Model $Model, $config = array()) {
-		$defaults = $this->_defaults;
+		$defaults = $this->_defaultConfig;
 		if ($configureDefaults = Configure::read('Passwordable')) {
 			$defaults = array_merge($defaults, $configureDefaults);
 		}
@@ -248,6 +248,10 @@ class PasswordableBehavior extends ModelBehavior {
 		$formField = $this->settings[$Model->alias]['formField'];
 		$formFieldRepeat = $this->settings[$Model->alias]['formFieldRepeat'];
 		$formFieldCurrent = $this->settings[$Model->alias]['formFieldCurrent'];
+
+		if ($formField === $this->settings[$Model->alias]['field']) {
+			throw new CakeException('Invalid setup - the form field must to be different from the model field (' . $this->settings[$Model->alias]['field'] . ').');
+		}
 
 		$rules = $this->_validationRules;
 		foreach ($rules as $field => $fieldRules) {
