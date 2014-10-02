@@ -62,7 +62,7 @@ class GeocodeLib {
 	 */
 	public $options = array(
 		'log' => false,
-		'pause' => 10000, # in ms
+		'pause' => 2000000, # in microseconds = 2 seconds
 		'min_accuracy' => self::ACC_COUNTRY,
 		'allow_inconclusive' => true,
 		'expect' => array(), # see accuracyTypes for details
@@ -81,6 +81,8 @@ class GeocodeLib {
 		'sensor' => 'false', # device with gps module sensor
 		//'key' => '' # not necessary anymore
 	);
+
+	public $reachedQueryLimit = false;
 
 	protected $error = array();
 	protected $debug = array();
@@ -237,6 +239,7 @@ class GeocodeLib {
 	 * @return bool Success
 	 */
 	public function geocode($address, $params = array()) {
+		if ($this->reachedQueryLimit) { return false; }
 		$this->reset(false);
 		$this->_setDebug('geocode', compact('address', 'params'));
 		$this->setParams(array_merge($params, array('address' => $address)));
@@ -275,7 +278,7 @@ class GeocodeLib {
 				break;
 
 			} elseif ($status == self::STATUS_TOO_MANY_QUERIES) {
-				// sent geocodes too fast, delay +0.1 seconds
+				// sent geocodes too fast, delay +2 seconds
 				if ($this->options['log']) {
 					CakeLog::write('geocode', __('Delay necessary for address \'%s\'', $address));
 				}
@@ -298,14 +301,16 @@ class GeocodeLib {
 				return false; # for now...
 			}
 
-			if ($count > 5) {
+			if ($count > 2) {
 				if ($this->options['log']) {
-					CakeLog::write('geocode', __('Aborted after too many trials with \'%s\'', $address));
+					CakeLog::write('geocode', __('Over daily query limit. Could not geocode \'%s\'', $latlng));
+					CakeLog::write('error',   __('Over daily query limit. Could not geocode \'%s\'', $latlng));
 				}
-				$this->setError('Too many trials - abort');
+				$this->setError('Too many trials - abort. Geocode over daily query limit.');
+				$this->reachedQueryLimit = true;
 				return false;
 			}
-			$this->pause(true);
+			$this->pause(false);
 		}
 
 		return true;
@@ -320,6 +325,7 @@ class GeocodeLib {
 	 * @return bool Success
 	 */
 	public function reverseGeocode($lat, $lng, $params = array()) {
+		if ($this->reachedQueryLimit) { return false; }
 		$this->reset(false);
 		$this->_setDebug('reverseGeocode', compact('lat', 'lng', 'params'));
 		$latlng = $lat . ',' . $lng;
@@ -357,7 +363,7 @@ class GeocodeLib {
 				break;
 
 			} elseif ($status == self::STATUS_TOO_MANY_QUERIES) {
-				// sent geocodes too fast, delay +0.1 seconds
+				// sent geocodes too fast, delay +2 seconds
 				if ($this->options['log']) {
 					CakeLog::write('geocode', __('Delay necessary for \'%s\'', $latlng));
 				}
@@ -372,14 +378,16 @@ class GeocodeLib {
 				}
 				return false; # for now...
 			}
-			if ($count > 5) {
+			if ($count > 2) {
 				if ($this->options['log']) {
-					CakeLog::write('geocode', __('Aborted after too many trials with \'%s\'', $latlng));
+					CakeLog::write('geocode', __('Over daily query limit. Could not geocode \'%s\'', $latlng));
+					CakeLog::write('error',   __('Over daily query limit. Could not geocode \'%s\'', $latlng));
 				}
-				$this->setError(__('Too many trials - abort'));
+				$this->setError('Too many trials - abort. Geocode over daily query limit.');
+				$this->reachedQueryLimit = true;
 				return false;
 			}
-			$this->pause(true);
+			$this->pause(false);
 		}
 
 		return true;
