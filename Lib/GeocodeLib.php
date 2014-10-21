@@ -303,8 +303,8 @@ class GeocodeLib {
 
 			if ($count > 2) {
 				if ($this->options['log']) {
-					CakeLog::write('geocode', __('Over daily query limit. Could not geocode \'%s\'', $latlng));
-					CakeLog::write('error',   __('Over daily query limit. Could not geocode \'%s\'', $latlng));
+					CakeLog::write('geocode', __('Over daily query limit. Could not geocode \'%s\'', $address));
+					CakeLog::write('error',   __('Over daily query limit. Could not geocode \'%s\'', $address));
 				}
 				$this->setError('Too many trials - abort. Geocode over daily query limit.');
 				$this->reachedQueryLimit = true;
