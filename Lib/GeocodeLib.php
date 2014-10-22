@@ -515,6 +515,10 @@ class GeocodeLib {
 		if (!is_array($record)) {
 			$record = json_decode($record, true);
 		}
+		if (empty($record['results'])) {
+			$record['results'] = [];
+			return $record;
+		}
 		$record['results'] = $this->_transformData($record['results']);
 		return $record;
 	}
