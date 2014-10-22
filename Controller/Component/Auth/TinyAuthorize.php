@@ -29,14 +29,13 @@ if (!defined('ACL_FILE')) {
  *
  * @version 1.2 - now allows other parent model relations besides Role/role_id
  * @author Mark Scherer
- * @cakephp 2.x
  * @license MIT
  */
 class TinyAuthorize extends BaseAuthorize {
 
 	protected $_acl = null;
 
-	protected $_defaults = array(
+	protected $_defaultConfig = array(
 		'superadminRole' => null, // quick way to allow access to every action
 		'allowUser' => false, // quick way to allow user access to non prefixed urls
 		'allowAdmin' => false, // quick way to allow admin access to admin prefixed urls
@@ -49,12 +48,18 @@ class TinyAuthorize extends BaseAuthorize {
 		'aclKey' => 'role_id', // only for single roles per user (BT)
 	);
 
-	public function __construct(ComponentCollection $Collection, $settings = array()) {
-		$settings = array_merge($this->_defaults, $settings);
-		parent::__construct($Collection, $settings);
+	/**
+	 * TinyAuthorize::__construct()
+	 *
+	 * @param ComponentCollection $Collection
+	 * @param array $config
+	 */
+	public function __construct(ComponentCollection $Collection, $config = array()) {
+		$config += $this->_defaultConfig;
+		parent::__construct($Collection, $config);
 
-		if (Cache::config($settings['cache']) === false) {
-			throw new CakeException(__d('dev', 'TinyAuth could not find `%s` cache - expects at least a `default` cache', $settings['cache']));
+		if (Cache::config($config['cache']) === false) {
+			throw new CakeException(sprintf('TinyAuth could not find `%s` cache - expects at least a `default` cache', $config['cache']));
 		}
 	}
 
@@ -83,7 +88,7 @@ class TinyAuthorize extends BaseAuthorize {
 			$roles = array($user[$this->settings['aclKey']]);
 		} else {
 			$acl = $this->settings['aclModel'] . '/' . $this->settings['aclKey'];
-			trigger_error(__d('dev', 'Missing acl information (%s) in user session', $acl));
+			trigger_error(sprintf('Missing acl information (%s) in user session', $acl));
 			$roles = array();
 		}
 		return $this->validate($roles, $request->params['plugin'], $request->params['controller'], $request->params['action']);
@@ -93,6 +98,10 @@ class TinyAuthorize extends BaseAuthorize {
 	 * Validate the url to the role(s)
 	 * allows single or multi role based authorization
 	 *
+	 * @param array $roles
+	 * @param string $plugin
+	 * @param string $controller
+	 * @param string $action
 	 * @return bool Success
 	 */
 	public function validate($roles, $plugin, $controller, $action) {
@@ -176,6 +185,7 @@ class TinyAuthorize extends BaseAuthorize {
 	 * - resolves role slugs to their primary key / identifier
 	 * - resolves wildcards to their verbose translation
 	 *
+	 * @param string $path
 	 * @return array Roles
 	 */
 	protected function _getAcl($path = null) {
@@ -193,13 +203,13 @@ class TinyAuthorize extends BaseAuthorize {
 		if (!file_exists($path . ACL_FILE)) {
 			touch($path . ACL_FILE);
 		}
-		
+
 		if (function_exists('parse_ini_file')) {
 			$iniArray = parse_ini_file($path . ACL_FILE, true);
 		} else {
 			$iniArray = parse_ini_string(file_get_contents($path . ACL_FILE), true);
 		}
-		
+
 		$availableRoles = Configure::read($this->settings['aclModel']);
 		if (!is_array($availableRoles)) {
 			$Model = $this->getModel();
@@ -210,7 +220,7 @@ class TinyAuthorize extends BaseAuthorize {
 			Configure::write($this->settings['aclModel'], $availableRoles);
 		}
 		if (!is_array($availableRoles) || !is_array($iniArray)) {
-			trigger_error(__d('dev', 'Invalid Role Setup for TinyAuthorize (no roles found)'));
+			trigger_error('Invalid Role Setup for TinyAuthorize (no roles found)');
 			return array();
 		}
 

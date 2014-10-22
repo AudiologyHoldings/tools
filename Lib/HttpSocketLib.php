@@ -16,7 +16,6 @@ App::uses('CurlLib', 'Tools.Lib');
  *
  * @author Mark Scherer
  * @license MIT
- * @cakephp 2.x
  */
 class HttpSocketLib {
 
@@ -92,7 +91,7 @@ class HttpSocketLib {
 			'use' => $this->use,
 			'timeout' => $this->timeout,
 		);
-		$options = array_merge($defaults, $options);
+		$options += $defaults;
 
 		// cached?
 		if ($options['cache']) {

@@ -1,6 +1,13 @@
 # CakePHP Tools Plugin
 
+[![Build Status](https://api.travis-ci.org/dereuromark/cakephp-tools.png?branch=master)](https://travis-ci.org/dereuromark/cakephp-tools)
+[![Latest Stable Version](https://poser.pugx.org/dereuromark/cakephp-tools/v/stable.png)](https://packagist.org/packages/dereuromark/cakephp-tools)
+[![Coverage Status](https://coveralls.io/repos/dereuromark/cakephp-tools/badge.png)](https://coveralls.io/r/dereuromark/cakephp-tools)
+[![License](https://poser.pugx.org/dereuromark/cakephp-tools/license.png)](https://packagist.org/packages/dereuromark/cakephp-tools)
+[![Total Downloads](https://poser.pugx.org/dereuromark/tools-cakephp/d/total.png)](https://packagist.org/packages/dereuromark/cakephp-tools)
+
 A CakePHP 2.x Plugin containing several useful tools that can be used in many projects.
+This plugin requires PHP5.3+
 
 Please note: New functionality has been tested against 2.x (current master and dev) only. Please upgrade if possible.
 
@@ -10,7 +17,14 @@ Installing the Plugin is pretty much as with every other CakePHP Plugin.
 * Put the files in `APP/Plugin/Tools`
 * Make sure you have `CakePlugin::load('Tools')` or `CakePlugin::loadAll()` in your bootstrap
 
-Tip: You can also use packagist now @ https://packagist.org/packages/dereuromark/tools-cakephp
+Tip: You can also use packagist now @ https://packagist.org/packages/dereuromark/cakephp-tools
+
+```
+"require": {
+	"dereuromark/cakephp-tools": "dev-master"
+}
+```
+or use the tags, e.g. `0.4` directly.
 
 That's it. It should be up and running.
 
@@ -82,7 +96,18 @@ App::uses('GeocoderBehavior', 'Tools.Model/Behavior');
 ```
 
 Tip: For how to use them, try to find some information in the test cases.
-For a quick reference or some larger modules see the [Tools Plugin Wiki](https://github.com/dereuromark/tools/wiki)
+For a quick reference or some larger modules see the [Tools Plugin Wiki](https://github.com/dereuromark/cakephp-tools/wiki)
+
+For including components, helper and behaviors you don't need App::uses() calls.
+So for a pretty standard CakePHP app with some Tools plugin enhancements, the AppController could look like this:
+```php
+public $components = array(
+	'Session', 'RequestHandler', 'Tools.Common', 'Auth');
+
+public $helpers = array(
+	'Session', 'Html', 'Form' => array('className' => 'Tools.FormExt'),
+	'Tools.Common', 'Tools.Format', 'Tools.Datetime', 'Tools.Numeric');
+```
 
 ## The cool stuff
 
@@ -95,7 +120,7 @@ For a quick reference or some larger modules see the [Tools Plugin Wiki](https:/
 * RSS and Ajax Views for better responses (Ajax also comes with an optional component).
 * testAction() defaults to GET
 
-A full list of fixes and useful migration tweaks towards the next major version see [here](https://github.com/dereuromark/tools/wiki/Included-fixes-and-migration-tweaks).
+A full list of fixes and useful migration tweaks towards the next major version see [here](https://github.com/dereuromark/cakephp-tools/wiki/Included-fixes-and-migration-tweaks).
 
 ### Additional classes and features
 
@@ -107,10 +132,13 @@ A full list of fixes and useful migration tweaks towards the next major version 
 * With MyModel you can build subqueries the Cake way.
 * Tokens, Qlogin, TinyUrl, KeyValue functionality included.
 * DiffLib, ZipLib, WeatherLib and many more lib functionality.
-* The TextExt, Datetime, Numeric and FormExt helpers provide extended functionality if desired.
+* The TextExt, Datetime, Numeric helpers etc provide extended functionality if desired.
+* FormExt and HtmlExt helpers also provide extended functionality and 3.x shims.
 * Tree helper for working with (complex) trees.
 * EmailLib as a wrapper for CakeEmail adding some more usefulness and making debugging/testing easier.
 * GoogleMapV3, Gravatar, Qrcode, Timeline, Typography, Ical, Hcard provide additional helper functionality.
+* NEW: Backported StringTemplate class (from CakePHP3.0) can be used to use template based rendering of HTML tags.
+* NEW: Backported password_hash() functionality via Tools.Modern PasswordHasher and Passwordable out of the box.
 
 and much more
 
@@ -120,23 +148,12 @@ Use at your own risk. Please provide any fixes or enhancements via issue or bett
 Some classes are still from 1.2 (and are merely upgraded to 2.x) and might still need some serious refactoring.
 If you are able to help on that one, that would be awesome.
 
-### Status
-[![Build Status](https://api.travis-ci.org/dereuromark/tools.png?branch=master)](https://travis-ci.org/dereuromark/tools)
-[![Latest Stable Version](https://poser.pugx.org/dereuromark/tools-cakephp/v/stable.png)](https://packagist.org/packages/dereuromark/tools-cakephp)
-[![Coverage Status](https://coveralls.io/repos/dereuromark/tools/badge.png)](https://coveralls.io/r/dereuromark/tools)
-[![License](https://poser.pugx.org/dereuromark/tools-cakephp/license.png)](https://packagist.org/packages/dereuromark/tools-cakephp)
-[![Total Downloads](https://poser.pugx.org/dereuromark/tools-cakephp/d/total.png)](https://packagist.org/packages/dereuromark/tools-cakephp)
-
 ### Branching strategy
 The master branch is the currently active and maintained one and works with the current 2.x stable version.
 Older versions might be found in their respective branches (1.3, 2.0, 2.3, ...).
 Please provide PRs mainly against master branch then.
 
 For details on how to contribute please read the [CONTRIBUTING page](CONTRIBUTING.md).
-
-### License
-Licensed under [The MIT License](http://www.opensource.org/licenses/mit-license.php)
-unless specified otherwise (in the classes).
 
 ### TODOs
 
@@ -150,3 +167,4 @@ unless specified otherwise (in the classes).
   (you need to now manually include it if needed).
 * 2014-01 Changed Garbige to Garbage in method names.
 * 2014-02 Qlogin now uses Token model instead of deprecated CodeKey per default.
+* 2014-07 Packagist package name has been renamed to "cakephp-tools".

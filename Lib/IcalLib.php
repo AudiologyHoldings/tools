@@ -13,7 +13,6 @@ App::uses('TimeLib', 'Tools.Utility');
  *
  * @author Mark Scherer
  * @license MIT
- * @cakephp 2.x
  */
 class IcalLib {
 
@@ -115,7 +114,9 @@ class IcalLib {
 /** PARSING **/
 
 	public function parse($url) {
-		if (!file_exists($url) || !($res = file_get_contents($url))) {
+		$context = stream_context_create(
+			array('http' => array('header' => 'Connection: close')));
+		if (!file_exists($url) || !($res = file_get_contents($url, 0, $context))) {
 			return false;
 		}
 		$this->Ical = new ical($url);

@@ -12,7 +12,6 @@ App::uses('HttpSocket', 'Network/Http');
  * - Work with exceptions in 2.x
  *
  * @author Mark Scherer
- * @cakephp 2.x
  * @licence MIT
  */
 class GeocodeLib {
@@ -119,7 +118,7 @@ class GeocodeLib {
 
 		$this->setOptions($options);
 		if (empty($this->options['host'])) {
-			$this->options['host'] = self::DEFAULT_HOST;
+			$this->options['host'] = static::DEFAULT_HOST;
 		}
 	}
 
@@ -190,7 +189,7 @@ class GeocodeLib {
 		$params = array(
 			'host' => $this->options['host']
 		);
-		$url = String::insert(self::BASE_URL, $params, array('before' => '{', 'after' => '}', 'clean' => true));
+		$url = String::insert(static::BASE_URL, $params, array('before' => '{', 'after' => '}', 'clean' => true));
 		return $url;
 	}
 
@@ -242,7 +241,8 @@ class GeocodeLib {
 		if ($this->reachedQueryLimit) { return false; }
 		$this->reset(false);
 		$this->_setDebug('geocode', compact('address', 'params'));
-		$this->setParams(array_merge($params, array('address' => $address)));
+		$params = array('address' => $address) + $params;
+		$this->setParams($params);
 
 		$count = 0;
 		$requestUrl = $this->_url();
@@ -266,7 +266,7 @@ class GeocodeLib {
 
 			$status = $result['status'];
 
-			if ($status == self::STATUS_SUCCESS) {
+			if ($status == static::STATUS_SUCCESS) {
 				if (!$this->_process($result)) {
 					return false;
 				}
@@ -277,8 +277,8 @@ class GeocodeLib {
 				}
 				break;
 
-			} elseif ($status == self::STATUS_TOO_MANY_QUERIES) {
-				// sent geocodes too fast, delay +2 seconds
+			} elseif ($status == static::STATUS_TOO_MANY_QUERIES) {
+				// sent geocodes too fast, delay +0.1 seconds
 				if ($this->options['log']) {
 					CakeLog::write('geocode', __('Delay necessary for address \'%s\'', $address));
 				}
@@ -301,16 +301,15 @@ class GeocodeLib {
 				return false; # for now...
 			}
 
-			if ($count > 2) {
+			if ($count > 5) {
 				if ($this->options['log']) {
-					CakeLog::write('geocode', __('Over daily query limit. Could not geocode \'%s\'', $address));
-					CakeLog::write('error',   __('Over daily query limit. Could not geocode \'%s\'', $address));
+					CakeLog::write('geocode', __('Aborted after too many trials with \'%s\'', $address));
 				}
 				$this->setError('Too many trials - abort. Geocode over daily query limit.');
 				$this->reachedQueryLimit = true;
 				return false;
 			}
-			$this->pause(false);
+			$this->pause(true);
 		}
 
 		return true;
@@ -329,7 +328,8 @@ class GeocodeLib {
 		$this->reset(false);
 		$this->_setDebug('reverseGeocode', compact('lat', 'lng', 'params'));
 		$latlng = $lat . ',' . $lng;
-		$this->setParams(array_merge($params, array('latlng' => $latlng)));
+		$params = array('latlng' => $latlng) + $params;
+		$this->setParams($params);
 
 		$count = 0;
 		$requestUrl = $this->_url();
@@ -351,7 +351,7 @@ class GeocodeLib {
 
 			$status = $result['status'];
 
-			if ($status == self::STATUS_SUCCESS) {
+			if ($status == static::STATUS_SUCCESS) {
 				if (!$this->_process($result)) {
 					return false;
 				}
@@ -362,8 +362,8 @@ class GeocodeLib {
 				}
 				break;
 
-			} elseif ($status == self::STATUS_TOO_MANY_QUERIES) {
-				// sent geocodes too fast, delay +2 seconds
+			} elseif ($status == static::STATUS_TOO_MANY_QUERIES) {
+				// sent geocodes too fast, delay +0.1 seconds
 				if ($this->options['log']) {
 					CakeLog::write('geocode', __('Delay necessary for \'%s\'', $latlng));
 				}
@@ -380,14 +380,13 @@ class GeocodeLib {
 			}
 			if ($count > 2) {
 				if ($this->options['log']) {
-					CakeLog::write('geocode', __('Over daily query limit. Could not geocode \'%s\'', $latlng));
-					CakeLog::write('error',   __('Over daily query limit. Could not geocode \'%s\'', $latlng));
+					CakeLog::write('geocode', __('Aborted after too many trials with \'%s\'', $latlng));
 				}
 				$this->setError('Too many trials - abort. Geocode over daily query limit.');
 				$this->reachedQueryLimit = true;
 				return false;
 			}
-			$this->pause(false);
+			$this->pause(true);
 		}
 
 		return true;
@@ -872,13 +871,13 @@ class GeocodeLib {
 	 */
 	public function errorMessage($code) {
 		$codes = array(
-			self::CODE_SUCCESS => 'Success',
-			self::CODE_BAD_REQUEST => 'Bad Request',
-			self::CODE_MISSING_ADDRESS => 'Bad Address',
-			self::CODE_UNKNOWN_ADDRESS => 'Unknown Address',
-			self::CODE_UNAVAILABLE_ADDRESS => 'Unavailable Address',
-			self::CODE_BAD_KEY => 'Bad Key',
-			self::CODE_TOO_MANY_QUERIES => 'Too Many Queries',
+			static::CODE_SUCCESS => 'Success',
+			static::CODE_BAD_REQUEST => 'Bad Request',
+			static::CODE_MISSING_ADDRESS => 'Bad Address',
+			static::CODE_UNKNOWN_ADDRESS => 'Unknown Address',
+			static::CODE_UNAVAILABLE_ADDRESS => 'Unavailable Address',
+			static::CODE_BAD_KEY => 'Bad Key',
+			static::CODE_TOO_MANY_QUERIES => 'Too Many Queries',
 		);
 		if (isset($codes[$code])) {
 			return __($codes[$code]);

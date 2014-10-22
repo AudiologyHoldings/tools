@@ -36,7 +36,7 @@ class FormExtHelper extends FormHelper {
 		'autoComplete' => false
 	);
 
-	public function __construct($View = null, $settings = array()) {
+	public function __construct($View = null, $config = array()) {
 		if (($webroot = Configure::read('Asset.webroot')) !== null) {
 			$this->settings['webroot'] = $webroot;
 		}
@@ -44,7 +44,7 @@ class FormExtHelper extends FormHelper {
 			$this->settings['js'] = $js;
 		}
 
-		parent::__construct($View, $settings);
+		parent::__construct($View, $config);
 	}
 
 	/**
@@ -79,7 +79,7 @@ class FormExtHelper extends FormHelper {
 	 * Create postLinks with a default class "postLink"
 	 *
 	 * @see FormHelper::postLink for details
-	 *
+
 	 * @return string
 	 */
 	public function postLink($title, $url = null, $options = array(), $confirmMessage = false) {
@@ -199,11 +199,8 @@ class FormExtHelper extends FormHelper {
 	 * @link http://book.cakephp.org/view/1390/Automagic-Form-Elements
 	 */
 	public function inputExt($fieldName, $options = array()) {
-		$options = array_merge(
-			array('before' => null, 'between' => null, 'after' => null, 'format' => null),
-			$this->_inputDefaults,
-			$options
-		);
+		$defaults = $this->_inputDefaults + array('before' => null, 'between' => null, 'after' => null, 'format' => null);
+		$options += $defaults;
 
 		$modelKey = $this->model();
 		$fieldKey = $this->field();
@@ -591,8 +588,7 @@ class FormExtHelper extends FormHelper {
 			'empty' => false,
 			'return' => true,
 		);
-
-		$customOptions = array_merge($defaultOptions, $options);
+		$customOptions = $options + $defaultOptions;
 
 		$res[] = $this->date($field, $customOptions);
 		$res[] = $this->time($field, $customOptions);
@@ -707,7 +703,7 @@ class FormExtHelper extends FormHelper {
 			'minYear' => date('Y') - 10,
 			'maxYear' => date('Y') + 10
 		);
-		$defaultOptions = array_merge($defaultOptions, (array)Configure::read('Form.date'));
+		$defaultOptions = (array)Configure::read('Form.date') + $defaultOptions;
 
 		$fieldName = Inflector::camelize($fieldName);
 
@@ -862,15 +858,8 @@ class FormExtHelper extends FormHelper {
 		}
 		$fieldname = Inflector::camelize($field);
 
-		$customOptions = array_merge($defaultOptions, $options);
+		$customOptions = $options + $defaultOptions;
 		$format24Hours = (int)$customOptions['timeFormat'] !== 24 ? false : true;
-
-		if (strpos($field, '.') !== false) {
-			list($model, $field) = explode('.', $field, 2);
-		} else {
-			$entity = $this->entity();
-			$model = $this->model();
-		}
 
 		$blacklist = array('timeFormat' => null, 'dateFormat' => null, 'separator' => null);
 
@@ -1046,10 +1035,10 @@ jQuery(\'' . $selector . '\').maxlength(' . $this->Js->object($settings, array('
 	public function autoComplete($field = null, $options = array(), $jquery = null) {
 		$this->autoCompleteScripts();
 
-		$defaultOptions = array(
+		$defaults = array(
 			'autocomplete' => 'off'
 		);
-		$options = array_merge($defaultOptions, $options);
+		$options += $defaults;
 		if (empty($options['id']) && is_array($jquery)) {
 			$options['id'] = Inflector::camelize(str_replace(".", "_", $field));
 		}
@@ -1149,7 +1138,7 @@ jQuery(\'' . $selector . '\').maxlength(' . $this->Js->object($settings, array('
 		$defaults = array(
 			'class' => 'checkbox-toggle checkboxToggle'
 		);
-		$options = array_merge($defaults, $options);
+		$options += $defaults;
 		return $script . parent::checkbox($fieldName, $options);
 	}
 

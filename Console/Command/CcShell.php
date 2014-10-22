@@ -4,7 +4,7 @@ App::uses('Folder', 'Utility');
 App::uses('File', 'Utility');
 
 if (!defined('LF')) {
-	define('LF', PHP_EOL); # use PHP to detect default linebreak
+	define('LF', PHP_EOL); // Use PHP to detect default linebreak
 }
 
 /**
@@ -12,7 +12,6 @@ if (!defined('LF')) {
  * Workes perfectly with PHPDesigner - but should also work with most other IDEs out of the box
  *
  * @version 1.1
- * @cakephp 2.x
  * @author Mark Scherer
  * @license MIT
  */
@@ -358,7 +357,7 @@ class CcShell extends AppShell {
 		}
 
 		if (!isset($this->plugins)) {
-			$this->plugins = App::objects('plugin');
+			$this->plugins = CakePlugin::loaded();
 		}
 
 		if (!empty($this->plugins)) {

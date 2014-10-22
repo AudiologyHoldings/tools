@@ -17,7 +17,6 @@ App::uses('AuthComponent', 'Controller/Component');
  * - dynamic login scope validation
  *
  * @author Mark Scherer
- * @cakephp 2.x
  * @license MIT
  */
 class AuthExtComponent extends AuthComponent {
@@ -36,7 +35,7 @@ class AuthExtComponent extends AuthComponent {
 
 	public $loginError = null;
 
-	protected $_defaults = array(
+	protected $_defaultConfig = array(
 		'multi' => null, # null=auto - yes/no multiple roles (HABTM table between users and roles)
 		'parentModelAlias' => USER_ROLE_KEY,
 		'userModel' => CLASS_USER //TODO: allow plugin syntax
@@ -45,13 +44,14 @@ class AuthExtComponent extends AuthComponent {
 	/**
 	 * Merge in Configure::read('Auth') settings
 	 *
-	 * @param mixed $Collection
-	 * @param mixed $settings
+	 * @param ComponentCollection $Collection
+	 * @param array $config
 	 */
-	public function __construct(ComponentCollection $Collection, $settings = array()) {
-		$settings = array_merge($this->_defaults, (array)Configure::read('Auth'), $settings);
+	public function __construct(ComponentCollection $Collection, $config = array()) {
+		$defaults = (array)Configure::read('Auth') + $this->_defaultConfig;
+		$config += $defaults;
 
-		parent::__construct($Collection, $settings);
+		parent::__construct($Collection, $config);
 	}
 
 	public function initialize(Controller $Controller) {
@@ -137,7 +137,7 @@ class AuthExtComponent extends AuthComponent {
 			}
 
 			$this->Session->renew();
-			$this->Session->write(self::$sessionKey, $user);
+			$this->Session->write(static::$sessionKey, $user);
 		}
 		return $this->loggedIn();
 	}

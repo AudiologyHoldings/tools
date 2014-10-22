@@ -35,7 +35,6 @@ App::uses('ModelBehavior', 'Model');
  *
  * @author Mark Scherer
  * @license MIT
- * @cakephp 2.x
  * @version 1.0
  */
 class ResetBehavior extends ModelBehavior {
@@ -102,7 +101,7 @@ class ResetBehavior extends ModelBehavior {
 			}
 		}
 
-		$params = array_merge($defaults, $params);
+		$params += $defaults;
 		$count = $Model->find('count', compact('conditions'));
 		$max = ini_get('max_execution_time');
 		if ($max) {

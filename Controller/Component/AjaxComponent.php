@@ -22,7 +22,7 @@ class AjaxComponent extends Component {
 
 	public $respondAsAjax = false;
 
-	protected $_defaults = array(
+	protected $_defaultConfig = array(
 		'autoDetect' => true,
 		'resolveRedirect' => true,
 		'flashKey' => 'Message.flash' // Use "messages" for Tools plugin, set to false to disable
@@ -32,11 +32,12 @@ class AjaxComponent extends Component {
 	 * Constructor.
 	 *
 	 * @param ComponentCollection $collection
-	 * @param array $settings
+	 * @param array $config
 	 */
-	public function __construct(ComponentCollection $collection, $settings = array()) {
-		$settings = array_merge($this->_defaults, (array)Configure::read('Ajax'), $settings);
-		parent::__construct($collection, $settings);
+	public function __construct(ComponentCollection $collection, $config = array()) {
+		$defaults = (array)Configure::read('Ajax') + $this->_defaultConfig;
+		$config += $defaults;
+		parent::__construct($collection, $config);
 	}
 
 	public function initialize(Controller $Controller) {

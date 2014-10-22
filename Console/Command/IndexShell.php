@@ -18,9 +18,7 @@ App::uses('AppShell', 'Console/Command');
  * - PRIMARY_KEY Indexes for primary keys ("id")
  *
  * @author Mark Scherer
- * @link
  * @license http://www.opensource.org/licenses/mit-license.php The MIT License
- * @cakephp 2.x
  */
 class IndexShell extends AppShell {
 
@@ -60,14 +58,7 @@ class IndexShell extends AppShell {
 	 */
 	public function initialize() {
 		parent::initialize();
-		/*
-		if (file_exists(APP . 'Config' . DS . 'index.php')) {
-			include(APP . 'Config' . DS . 'index.php');
-			if (!empty($config)) {
-				$this->settings = array_merge($this->settings, $config);
-			}
-		}
-		*/
+
 		$this->_loadModels();
 	}
 
@@ -258,31 +249,31 @@ class IndexShell extends AppShell {
 			'options' => array(
 				'dry-run' => array(
 					'short' => 'd',
-					'help' => __d('cake_console', 'Dry run the update, no files will actually be modified.'),
+					'help' => 'Dry run the update, no files will actually be modified.',
 					'boolean' => true
 				),
 				'log' => array(
 					'short' => 'l',
-					'help' => __d('cake_console', 'Log all ouput to file log.txt in TMP dir'),
+					'help' => 'Log all ouput to file log.txt in TMP dir',
 					'boolean' => true
 				),
 				'interactive' => array(
 					'short' => 'i',
-					'help' => __d('cake_console', 'Interactive'),
+					'help' => 'Interactive',
 					'boolean' => true
 				),
 				'ds' => array(
 					'short' => 'c',
-					'help' => __d('cake_console', 'custom ds'),
+					'help' => 'Custom ds',
 					'boolean' => true
 				)
 			)
 		);
 
 		return parent::getOptionParser()
-			->description(__d('cake_console', "..."))
+			->description("...")
 			->addSubcommand('run', array(
-				'help' => __d('cake_console', 'Run'),
+				'help' => 'Run',
 				'parser' => $subcommandParser
 			));
 	}

@@ -40,7 +40,7 @@ class WeatherLib {
 	);
 
 	public function __construct() {
-		$this->settings = array_merge($this->settings, (array)Configure::read('Weather'));
+		$this->settings = (array)Configure::read('Weather') + $this->settings;
 	}
 
 	/**
@@ -142,7 +142,7 @@ class WeatherLib {
 			$params[] = $key . '=' . $option;
 		}
 		$params = (!empty($params) ? '?' : '') . implode('&', $params);
-		$domain = $this->settings['free'] ? self::API_URL_FREE : self::API_URL;
+		$domain = $this->settings['free'] ? static::API_URL_FREE : static::API_URL;
 		return $domain . $url . $params;
 	}
 

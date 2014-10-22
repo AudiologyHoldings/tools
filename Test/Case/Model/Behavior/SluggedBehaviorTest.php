@@ -44,10 +44,10 @@ class SluggedBehaviorTest extends CakeTestCase {
 			'ẞ' => 'SS'
 		),
 		'latin' => array (
-			'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Å' => 'A','Ă' => 'A', 'Æ' => 'AE', 'Ç' =>
+			'À' => 'A', 'Á' => 'A', 'Â' => 'A', 'Ã' => 'A', 'Å' => 'A', 'Ă' => 'A', 'Æ' => 'AE', 'Ç' =>
 			'C', 'È' => 'E', 'É' => 'E', 'Ê' => 'E', 'Ë' => 'E', 'Ì' => 'I', 'Í' => 'I', 'Î' => 'I',
 			'Ï' => 'I', 'Ð' => 'D', 'Ñ' => 'N', 'Ò' => 'O', 'Ó' => 'O', 'Ô' => 'O', 'Õ' => 'O', 'Ő' => 'O', 'Ø' => 'O',
-			'Ș' => 'S','Ț' => 'T', 'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ű' => 'U',
+			'Ș' => 'S', 'Ț' => 'T', 'Ù' => 'U', 'Ú' => 'U', 'Û' => 'U', 'Ű' => 'U',
 			'Ý' => 'Y', 'Þ' => 'TH', 'à' => 'a', 'á' => 'a', 'â' => 'a', 'ã' => 'a',
 			'å' => 'a', 'ă' => 'a', 'æ' => 'ae', 'ç' => 'c', 'è' => 'e', 'é' => 'e', 'ê' => 'e', 'ë' => 'e',
 			'ì' => 'i', 'í' => 'i', 'î' => 'i', 'ï' => 'i', 'ð' => 'd', 'ñ' => 'n', 'ò' => 'o', 'ó' =>
@@ -714,7 +714,7 @@ class SluggedBehaviorTest extends CakeTestCase {
 		$this->Model->Behaviors->unload('Slugged');
 		$this->Model->Behaviors->load('Tools.Slugged', array('mode' => 'ascii'));
 
-		foreach (self::$maps as $language => $map) {
+		foreach (static::$maps as $language => $map) {
 			foreach ($map as $from => $to) {
 				$result = $this->Model->slug($from, false);
 				$this->assertEquals($to, $result, $from . ' (' . $language . ') should become ' . $to . ' - but became ' . $result);
@@ -730,7 +730,7 @@ class SluggedBehaviorTest extends CakeTestCase {
 	 */
 	public function testCustomCharsAdditional() {
 		$rules = array();
-		foreach (self::$customMaps as $language => $map) {
+		foreach (static::$customMaps as $language => $map) {
 			foreach ($map as $from => $to) {
 				$rules['/' . $from . '/'] = $to;
 			}
@@ -741,7 +741,7 @@ class SluggedBehaviorTest extends CakeTestCase {
 		$this->Model->Behaviors->unload('Slugged');
 		$this->Model->Behaviors->load('Tools.Slugged', array('mode' => 'ascii'));
 
-		foreach (self::$customMaps as $language => $map) {
+		foreach (static::$customMaps as $language => $map) {
 			foreach ($map as $from => $to) {
 				$result = $this->Model->slug($from, false);
 				$this->assertEquals($to, $result, $from . ' (' . $language . ') should become ' . $to . ' - but became ' . $result);

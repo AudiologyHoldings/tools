@@ -185,11 +185,11 @@ class Utility {
 		if ($url === '' || $url === 'http://' || $url === 'http://www' || $url === 'http://www.') {
 			$url = '';
 		} else {
-			$url = self::autoPrefixUrl($url, 'http://');
+			$url = static::autoPrefixUrl($url, 'http://');
 		}
 
 		if ($headerRedirect && !empty($url)) {
-			$headers = self::getHeaderFromUrl($url);
+			$headers = static::getHeaderFromUrl($url);
 			if ($headers !== false) {
 				$headerString = implode("\n", $headers);
 
@@ -209,6 +209,72 @@ class Utility {
 			$length--;
 		}
 		return $url;
+	}
+
+	/**
+	 * A more robust wrapper around for file_exists() which easily
+	 * fails to return true for existent remote files.
+	 * Per default it allows http/https images to be looked up via urlExists()
+	 * for a better result.
+	 *
+	 * @param string $file File
+	 * @return bool Success
+	 */
+	public static function fileExists($file, $pattern = '~^https?://~i') {
+		if (!preg_match($pattern, $file)) {
+			return file_exists($file);
+		}
+		return static::urlExists($file);
+	}
+
+	/**
+	 * file_exists() does not always work with URLs.
+	 * So if you check on strpos(http) === 0 you can use this
+	 * to check for URLs instead.
+	 *
+	 * @param string $url Absolute URL
+	 * @return bool Success
+	 */
+	public static function urlExists($url) {
+		$headers = @get_headers($url);
+		if ($headers && preg_match('|\b200\b|', $headers[0])) {
+			return true;
+		}
+		return false;
+	}
+
+	/**
+	 * Utility::getMimeType()
+	 *
+	 * @param string $file File
+	 * @return string Mime type
+	 */
+	public static function getMimeType($file) {
+		if (!function_exists('finfo_open')) {
+			throw new InternalErrorException('finfo_open() required - please enable');
+		}
+
+		// Treat non local files differently
+		$pattern = '~^https?://~i';
+		if (preg_match($pattern, $file)) {
+			$headers = @get_headers($file);
+			if (!preg_match("|\b200\b|", $headers[0])) {
+				return '';
+			}
+			foreach ($headers as $header) {
+				if (strpos($header, 'Content-Type:') === 0) {
+					return trim(substr($header, 13));
+				}
+			}
+			return '';
+		}
+
+		$finfo = finfo_open(FILEINFO_MIME);
+		$mimetype = finfo_file($finfo, $file);
+		if (($pos = strpos($mimetype, ';')) !== false) {
+			$mimetype = substr($mimetype, 0, $pos);
+		}
+		return $mimetype;
 	}
 
 	/**
@@ -452,13 +518,13 @@ class Utility {
 			$depth = array($count);
 			if (is_array($array) && reset($array) !== false) {
 				foreach ($array as $value) {
-					$depth[] = self::countDim($value, true, $count + 1);
+					$depth[] = static::countDim($value, true, $count + 1);
 				}
 			}
 			$return = max($depth);
 		} else {
 			if (is_array(reset($array))) {
-				$return = self::countDim(reset($array)) + 1;
+				$return = static::countDim(reset($array)) + 1;
 			} else {
 				$return = 1;
 			}
@@ -567,7 +633,7 @@ class Utility {
 	 */
 	public static function arrayFlatten($array, $preserveKeys = false) {
 		if ($preserveKeys) {
-			return self::_arrayFlatten($array);
+			return static::_arrayFlatten($array);
 		}
 		if (!$array) {
 			return array();
@@ -575,7 +641,7 @@ class Utility {
 		$result = array();
 		foreach ($array as $key => $value) {
 			if (is_array($value)) {
-				$result = array_merge($result, self::arrayFlatten($value));
+				$result = array_merge($result, static::arrayFlatten($value));
 			} else {
 				$result[$key] = $value;
 			}
@@ -601,7 +667,7 @@ class Utility {
 		}
 		foreach ($a as $k => $v) {
 			if (is_array($v)) {
-				$f = self::_arrayFlatten($v, $f);
+				$f = static::_arrayFlatten($v, $f);
 			} else {
 				$f[$k] = $v;
 			}
@@ -640,7 +706,7 @@ class Utility {
 	 * @return void
 	 */
 	public static function startClock() {
-		self::$_counterStartTime = self::microtime();
+		static::$_counterStartTime = static::microtime();
 	}
 
 	/**
@@ -649,11 +715,11 @@ class Utility {
 	 * @return float
 	 */
 	public static function returnElapsedTime($precision = 8, $restartClock = false) {
-		$startTime = self::$_counterStartTime;
+		$startTime = static::$_counterStartTime;
 		if ($restartClock) {
-			self::startClock();
+			static::startClock();
 		}
-		return self::calcElapsedTime($startTime, self::microtime(), $precision);
+		return static::calcElapsedTime($startTime, static::microtime(), $precision);
 	}
 
 	/**
@@ -678,7 +744,7 @@ class Utility {
 	 * @param string $ind The string to indent with
 	 * @return string
 	 */
-	public function prettyJson($json, $ind = "\t") {
+	public static function prettyJson($json, $indString = "\t") {
 		// Replace any escaped \" marks so we don't get tripped up on quotemarks_counter
 		$tokens = preg_split('|([\{\}\]\[,])|', str_replace('\"', '~~PRETTY_JSON_QUOTEMARK~~', $json), -1, PREG_SPLIT_DELIM_CAPTURE);
 
@@ -695,7 +761,7 @@ class Utility {
 			}
 
 			if ($nextTokenUsePrefix) {
-				$prefix = str_repeat($ind, $indent);
+				$prefix = str_repeat($indString, $indent);
 			} else {
 				$prefix = null;
 			}
@@ -718,7 +784,7 @@ class Utility {
 				$indent--;
 
 				if ($indent >= 0) {
-					$prefix = str_repeat($ind, $indent);
+					$prefix = str_repeat($indString, $indent);
 				}
 
 				if ($nextTokenUsePrefix) {
@@ -732,8 +798,7 @@ class Utility {
 				$result .= $prefix . $token;
 			}
 		}
-		$result = str_replace('~~PRETTY_JSON_QUOTEMARK~~', '\"', $result);
-		return $result;
+		return str_replace('~~PRETTY_JSON_QUOTEMARK~~', '\"', $result);
 	}
 
 }

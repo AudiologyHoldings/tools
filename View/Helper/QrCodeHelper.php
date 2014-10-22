@@ -95,7 +95,7 @@ class QrCodeHelper extends AppHelper {
 	 * @return string Url
 	 */
 	protected function _uri($params = array()) {
-		$params = array_merge($this->options, $params);
+		$params += $this->options;
 		$pieces = array();
 		foreach ($params as $key => $value) {
 			$pieces[] = $key . '=' . $value;
@@ -248,7 +248,7 @@ class QrCodeHelper extends AppHelper {
 			//TODO
 		}
 		$value = (int)$value;
-		if ($value >= self::MIN_SIZE && $value <= self::MAX_SIZE) {
+		if ($value >= static::MIN_SIZE && $value <= static::MAX_SIZE) {
 			$this->options['chs'] = $value . 'x' . $value;
 			return true;
 		}
@@ -281,7 +281,7 @@ class QrCodeHelper extends AppHelper {
 	 * @return void
 	 */
 	public function reset() {
-		$this->setSize(self::DEFAULT_SIZE);
+		$this->setSize(static::DEFAULT_SIZE);
 		//$this->setLevel(QS_CODE_DEFAULT_LEVEL);
 		$this->options['chld'] = '';
 		$this->options['choe'] = Configure::read('App.encoding');

@@ -11,7 +11,7 @@
  */
 App::uses('Utility', 'Tools.Utility');
 
-# You can also use FULL_BASE_URL (cake) instead of HTTP_BASE
+// You can also use FULL_BASE_URL instead of HTTP_BASE
 if (!empty($_SERVER['HTTP_HOST'])) {
 	define('HTTP_HOST', $_SERVER['HTTP_HOST']);
 	define('HTTP_BASE', 'http://' . HTTP_HOST); //FULL_BASE_URL
@@ -57,11 +57,12 @@ define('FORMAT_DB_DATETIME', 'Y-m-d H:i:s'); // date(...)
 define('FORMAT_DB_DATE', 'Y-m-d');
 define('FORMAT_DB_TIME', 'H:i:s');
 
+// @deprecated Use NULL instead for nullish date(time)s
 define('DEFAULT_DATETIME', '0000-00-00 00:00:00');
 define('DEFAULT_DATE', '0000-00-00');
 define('DEFAULT_TIME', '00:00:00');
 
-# workpaths
+// Workpaths
 define('FILES', APP . 'files' . DS);
 define('LOCALE', APP . 'locale' . DS);
 
@@ -157,22 +158,22 @@ define('CHAR_LESS', '&lt;'); # <
 define('CHAR_GREATER', '&gt;'); # >
 define('CHAR_QUOTE', '&quot;'); # "
 define('CHAR_APOSTROPHE', '&#39'); # '
-define('CHAR_ARROWS', '&raquo;'); # »
-define('CHAR_ARROWS_R', '&#187;'); # »
-define('CHAR_ARROWS_L', '&#171;'); # «
-define('CHAR_AVERAGE', '&#216;'); # Ø
+define('CHAR_ARROWS', '&raquo;'); # Â»
+define('CHAR_ARROWS_R', '&#187;'); # Â»
+define('CHAR_ARROWS_L', '&#171;'); # Â«
+define('CHAR_AVERAGE', '&#216;'); # Ã˜
 define('CHAR_INFIN', '&infin;'); # 8
-define('CHAR_MILL', '&#137;'); # ‰ (per mille) / or &permil;
+define('CHAR_MILL', '&#137;'); # â€° (per mille) / or &permil;
 define('CHAR_PLUSMN', '&plusmn;'); # 8
-define('CHAR_HELLIP', '&#8230;'); # … (horizontal ellipsis = three dot leader)
-define('CHAR_CIRCA', '&asymp;'); # ˜ (almost equal to)
+define('CHAR_HELLIP', '&#8230;'); # â€¦ (horizontal ellipsis = three dot leader)
+define('CHAR_CIRCA', '&asymp;'); # Ëœ (almost equal to)
 define('CHAR_CHECKBOX_EMPTY', '&#9744;]'); #
 define('CHAR_CHECKBOX_MAKRED', '&#9745'); #
 define('CHAR_CHECKMARK', '&#10003;');
 define('CHAR_CHECKMARK_BOLD', '&#10004;');
 define('CHAR_BALLOT', '&#10007;');
 define('CHAR_BALLOT_BOLD', '&#10008;');
-define('CHAR_ABOUT', '&asymp;'); # … (horizontal ellipsis = three dot leader)
+define('CHAR_ABOUT', '&asymp;'); # â€¦ (horizontal ellipsis = three dot leader)
 
 /* not very often used */
 define('CHAR_RPIME', '&#8242;'); # ' (minutes)
@@ -186,32 +187,35 @@ define('CHAR_DOUBLE_RPIME', '&#8243;'); # ? (seconds)
  * //TODO move to TextLib?
  *
  * @return string
+ * @deprecated Use a lib class method instead
  */
-function slug($string, $separator = null, $low = true) {
-	$additionalSlugElements = array(
-		'/º|°/' => 0,
-		'/¹/' => 1,
-		'/²/' => 2,
-		'/³/' => 3,
-		// new utf8 char "capitel ß" still missing here! '/.../' => 'SS', (TODO in 2009)
-		'/@/' => 'at',
-		'/æ/' => 'ae',
-		'/©/' => 'C',
-		'/ç|¢/' => 'c',
-		'/Ð/' => 'D',
-		'/€/' => 'EUR',
-		'/™/' => 'TM',
-		// more missing?
-	);
-
-	if ($separator === null) {
-		$separator = defined('SEO_SEPARATOR') ? SEO_SEPARATOR : '-';
+if (!function_exists('slug')) {
+	function slug($string, $separator = null, $low = true) {
+		$additionalSlugElements = array(
+			'/Âº|Â°/' => 0,
+			'/Â¹/' => 1,
+			'/Â²/' => 2,
+			'/Â³/' => 3,
+			// new utf8 char "capitel ÃŸ" still missing here! '/.../' => 'SS', (TODO in 2009)
+			'/@/' => 'at',
+			'/Ã¦/' => 'ae',
+			'/Â©/' => 'C',
+			'/Ã§|Â¢/' => 'c',
+			'/Ã/' => 'D',
+			'/â‚¬/' => 'EUR',
+			'/â„¢/' => 'TM',
+			// more missing?
+		);
+	
+		if ($separator === null) {
+			$separator = defined('SEO_SEPARATOR') ? SEO_SEPARATOR : '-';
+		}
+		$res = Inflector::slug($string, $separator, $additionalSlugElements);
+		if ($low) {
+			$res = strtolower($res);
+		}
+		return $res;
 	}
-	$res = Inflector::slug($string, $separator, $additionalSlugElements);
-	if ($low) {
-		$res = strtolower($res);
-	}
-	return $res;
 }
 
 /**
@@ -222,6 +226,7 @@ function slug($string, $separator = null, $low = true) {
  *
  * @param string $str
  * @return string
+ * @deprecated Use a lib class method instead
  */
 function br2nl($str) {
 	$str = preg_replace("/(\r\n|\r|\n)/", "", $str);
@@ -235,6 +240,7 @@ function br2nl($str) {
  *
  * @param string $text Any text
  * @return string Safe string without new lines
+ * @deprecated Use a lib class method instead
  */
 function safenl($str) {
 	//$str = str_replace(chr(13).chr(10), " ", $str); # \r\n
@@ -432,7 +438,7 @@ function pre($var, $collapsedAndExpandable = false, $options = array()) {
 		'returns' => false, // Use returns(),
 		'debug' => false // Show only with debug > 0
 	);
-	$options = array_merge($defaults, $options);
+	$options += $defaults;
 	if ($options['debug'] && !Configure::read('debug')) {
 		return '';
 	}

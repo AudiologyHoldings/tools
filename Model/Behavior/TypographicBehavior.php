@@ -3,7 +3,6 @@
  * PHP 5
  *
  * @author Mark Scherer
- * @cakephp 2.x
  * @license MIT
  */
 
@@ -84,7 +83,7 @@ class TypographicBehavior extends ModelBehavior {
 		if (!isset($this->settings[$Model->alias])) {
 			$this->settings[$Model->alias] = $this->_defaultConfig;
 		}
-		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], $config);
+		$this->settings[$Model->alias] = $config + $this->settings[$Model->alias];
 
 		if (empty($this->settings[$Model->alias]['fields'])) {
 			$schema = $Model->schema();

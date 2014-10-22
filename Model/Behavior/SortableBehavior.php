@@ -15,7 +15,6 @@ App::uses('ModelBehavior', 'Model');
  * Reversed order:
  * The sort value of a new record will be calculated (currently highest + 1).
  *
- * @cakephp 2.x
  * @author Mark Scherer
  * @license MIT
  */
@@ -37,8 +36,7 @@ class SortableBehavior extends ModelBehavior {
 		if (!isset($this->settings[$Model->alias])) {
 			$this->settings[$Model->alias] = $this->_defaultConfig;
 		}
-		$this->settings[$Model->alias] = array_merge(
-		$this->settings[$Model->alias], (array)$config);
+		$this->settings[$Model->alias] = $config + $this->settings[$Model->alias];
 	}
 
 	/**

@@ -7,13 +7,12 @@ php:
 
 env:
   global:
+    - REPO_NAME=cakephp-tools
     - PLUGIN_NAME=Tools
     - DB=mysql
   matrix:
     - DB=mysql CAKE_VERSION=master
     - DB=mysql CAKE_VERSION=2.6
-    - DB=sqlite CAKE_VERSION=master db_class='Cake\Database\Driver\Sqlite' db_dsn='sqlite::memory:'
-    - DB=pgsql CAKE_VERSION=master db_class='Cake\Database\Driver\Postgres' db_dsn='pgsql:host=127.0.0.1;dbname=cakephp_test' db_database="cakephp_test" db_login='postgres' db_password=''
 
 matrix:
   include:
@@ -21,6 +20,7 @@ matrix:
       env:
         - CAKE_VERSION=master
         - COVERALLS=1
+  fast_finish: true
 
 before_script:
   - composer global require 'phpunit/phpunit=3.7.33'
@@ -35,7 +35,7 @@ before_script:
   - echo "<?php App::uses('BaseEmailConfig', 'Tools.Config'); class EmailConfig extends BaseEmailConfig {}" > Config/email.php
   - echo "Configure::write('Config.adminEmail', 'example@example.org');" >> Config/bootstrap.php
   - cd ..
-  - cp ../tools/phpunit.xml app/
+  - cp ../cakephp-tools/phpunit.xml app/
 
 script:
   - ../travis/script.sh

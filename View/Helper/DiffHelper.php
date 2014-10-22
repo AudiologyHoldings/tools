@@ -25,8 +25,8 @@ class DiffHelper extends AppHelper {
 	 * Loads the vendor classes and sets the include path for autoloader to work
 	 *
 	 */
-	public function __construct($View = null, $settings = array()) {
-		parent::__construct($View, $settings);
+	public function __construct($View = null, $config = array()) {
+		parent::__construct($View, $config);
 
 		$this->Diff = new DiffLib();
 	}
@@ -75,7 +75,7 @@ class DiffHelper extends AppHelper {
 		$defaults = array(
 			'class' => 'diff'
 		);
-		$options = array_merge($defaults, $options);
+		$options += $defaults;
 		$options['escape'] = null;
 		return $this->Html->tag('div', $string, $options);
 	}
@@ -94,7 +94,7 @@ class DiffHelper extends AppHelper {
 		$defaults = array(
 			'class' => 'diff'
 		);
-		$options = array_merge($defaults, $options);
+		$options += $defaults;
 		$options['escape'] = null;
 		return $this->Html->tag('div', $string, $options);
 	}

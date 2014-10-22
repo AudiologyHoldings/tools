@@ -147,6 +147,9 @@ class NamedScopeBehaviorTest extends MyCakeTestCase {
 	 * @return void
 	 */
 	public function testScopedFindWithVirtualFields() {
+		$this->db = ConnectionManager::getDataSource('test');
+		$this->skipIf(!($this->db instanceof Mysql), 'The virtualFields test is only compatible with Mysql.');
+
 		$this->Comment->scopes = array('active' => array('Comment.published' => 'Y'));
 		$this->Comment->User->scopes = array('senior' => array('User.id <' => '2'));
 
@@ -206,6 +209,50 @@ class NamedScopeBehaviorTest extends MyCakeTestCase {
 		);
 		$result = $this->Comment->scopedFind('activeAndSenior', array('options' => array('limit' => 1)));
 		$this->assertSame(1, count($result));
+	}
+
+	/**
+	 * NamedScopeBehaviorTest::testScopedFindOverwrite()
+	 *
+	 * @return void
+	 */
+	public function testScopedFindOverwrite() {
+		$this->Comment->scopes = array('active' => array('Comment.published' => 'Y'));
+
+		$this->Comment->Behaviors->load('Tools.NamedScope');
+		$this->Comment->User->Behaviors->load('Tools.NamedScope');
+		$this->Comment->scopedFinds = array(
+			'active' => array(
+				'name' => 'Active Comentators',
+				'find' => array(
+					'type' => 'all',
+					'virtualFields' => array(
+						'fullname' => "CONCAT(User.id, '-', User.user)"
+					),
+					'options' => array(
+						'scope' => array('Comment.active'),
+						'contain' => array('User'),
+						'fields' => array('User.id', 'fullname'),
+						'order' => array('fullname' => 'ASC'),
+						'limit' => 5
+					)
+				)
+			)
+		);
+		$result = $this->Comment->scopedFind('active', array('options' => array('limit' => 2)));
+		$this->assertSame(2, count($result));
+
+		$result = $this->Comment->scopedFind('active', array('type' => 'count'));
+		$this->assertSame(5, $result);
+
+		$result = $this->Comment->scopedFind('active', array('type' => 'first', 'options' => array('fields' => array('User.id', 'User.created'), 'order' => array('User.id' => 'DESC'))));
+		$expected = array(
+			'User' => array(
+				'id' => 4,
+				'created' => '2007-03-17 01:22:23'
+			)
+		);
+		$this->assertEquals($expected, $result);
 	}
 
 	/**

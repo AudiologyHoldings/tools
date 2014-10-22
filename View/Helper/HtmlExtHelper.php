@@ -58,11 +58,12 @@ class HtmlExtHelper extends HtmlHelper {
 		if (!isset($this->tags['time'])) {
 			$this->tags['time'] = '<time%s>%s</time>';
 		}
-		$options = array_merge(array(
+		$defaults = array(
 			'datetime' => '%Y-%m-%d %T',
 			'pubdate' => false,
 			'format' => '%Y-%m-%d %T',
-		), $options);
+		);
+		$options += $defaults;
 
 		if ($options['format'] !== null) {
 			if (!isset($this->Time)) {
@@ -101,11 +102,11 @@ class HtmlExtHelper extends HtmlHelper {
 	 * @return string Link
 	 */
 	public function completeLink($title, $url = null, $options = array(), $confirmMessage = false) {
-		// Named are deprecated
 		if (is_array($url)) {
+			// Named are deprecated
 			$url += $this->params['named'];
-		}
-		if (is_array($url)) {
+
+			// Add query strings
 			if (!isset($url['?'])) {
 				$url['?'] = array();
 			}
@@ -121,17 +122,17 @@ class HtmlExtHelper extends HtmlHelper {
 	 * @return string Link
 	 */
 	public function completeUrl($url = null, $full = false, $escape = true) {
-		// Named are deprecated
 		if (is_array($url)) {
+			// Named are deprecated
 			$url += $this->params['named'];
-		}
-		if (is_array($url)) {
+
+			// Add query strings
 			if (!isset($url['?'])) {
 				$url['?'] = array();
 			}
 			$url['?'] += $this->request->query;
 		}
-		return $this->url($url, $options, $escape);
+		return $this->url($url, $full, $escape);
 	}
 
 	/**
@@ -163,7 +164,6 @@ class HtmlExtHelper extends HtmlHelper {
 				$options['rel'] = 'nofollow';
 			}
 		}
-		//$this->log($url, '404');
 		return $this->link($title, $url, $options, $confirmMessage);
 	}
 

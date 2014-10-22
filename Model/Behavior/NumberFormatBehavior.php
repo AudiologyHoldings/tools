@@ -27,7 +27,6 @@ App::uses('ModelBehavior', 'Model');
  *
  * @author Mark Scherer
  * @license MIT
- * @cakephp 2.x
  */
 class NumberFormatBehavior extends ModelBehavior {
 
@@ -83,9 +82,8 @@ class NumberFormatBehavior extends ModelBehavior {
 				$loc['decimals'] => $this->settings[$Model->alias]['transform'][','],
 			);
 		}
-		//debug($this->settings[$Model->alias]);
 
-		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], $config);
+		$this->settings[$Model->alias] = $config + $this->settings[$Model->alias];
 
 		$numberFields = array();
 		$schema = $Model->schema();
