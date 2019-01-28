@@ -161,7 +161,7 @@ class EmailLib extends CakeEmail {
 		if (empty($options['mimetype'])) {
 			$options['mimetype'] = $this->_getMime($file);
 		}
-		$options['contentId'] = $contentId ? $contentId : str_replace('-', '', String::uuid()) . '@' . $this->_domain;
+		$options['contentId'] = $contentId ? $contentId : str_replace('-', '', CakeText::uuid()) . '@' . $this->_domain;
 		$file = array($name => $options);
 		$res = $this->addAttachments($file);
 		if ($contentId === null) {
@@ -184,7 +184,7 @@ class EmailLib extends CakeEmail {
 	public function addEmbeddedBlobAttachment($content, $name, $mimeType = null, $contentId = null, $options = array()) {
 		$options['content'] = $content;
 		$options['mimetype'] = $mimeType;
-		$options['contentId'] = $contentId ? $contentId : str_replace('-', '', String::uuid()) . '@' . $this->_domain;
+		$options['contentId'] = $contentId ? $contentId : str_replace('-', '', CakeText::uuid()) . '@' . $this->_domain;
 		$file = array($name => $options);
 		$res = $this->addAttachments($file);
 		if ($contentId === null) {

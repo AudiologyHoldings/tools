@@ -56,7 +56,7 @@ class IcalHelperTest extends MyCakeTestCase {
 			'organizer' => 'CEO',
 			'class' => 'public',
 			'timestamp' => '2010-10-08 22:23:34',
-			'id' => String::uuid(),
+			'id' => CakeText::uuid(),
 			'location' => 'München'
 		);
 		$this->Ical->add($data);

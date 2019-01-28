@@ -190,7 +190,7 @@ class GeocodeLib {
 		$params = array(
 			'host' => $this->options['host']
 		);
-		$url = String::insert(self::BASE_URL, $params, array('before' => '{', 'after' => '}', 'clean' => true));
+		$url = CakeText::insert(self::BASE_URL, $params, array('before' => '{', 'after' => '}', 'clean' => true));
 		return $url;
 	}
 

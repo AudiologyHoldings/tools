@@ -768,7 +768,7 @@ class CommonComponent extends Component {
 	/**
 	 * Takes list of items and transforms it into an array
 	 * + cleaning (trim, no empty parts, etc).
-	 * Similar to String::tokenize, but with more logic.
+	 * Similar to CakeText::tokenize, but with more logic.
 	 *
 	 * //TODO: 3.4. parameter as array, move to Lib
 	 *
@@ -784,7 +784,7 @@ class CommonComponent extends Component {
 		}
 
 		// parses the list, but leaves tokens untouched inside () brackets
-		$stringArray = String::tokenize($string, $separator);
+		$stringArray = CakeText::tokenize($string, $separator);
 		$returnArray = array();
 
 		if (empty($stringArray)) {
