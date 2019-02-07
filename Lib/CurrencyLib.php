@@ -17,8 +17,7 @@ App::uses('Xml', 'Utility');
  * alternativly: http://www.currencyserver.de/webservice/CurrencyServerWebService.asmx/getXmlStream?provider=AVERAGE
  *
  * @author Mark Scherer
- * @license MIT
- * @cakephp 2.x
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class CurrencyLib {
 
@@ -68,7 +67,7 @@ class CurrencyLib {
 	 */
 	public function table($base = 'EUR', $decimals = 2) {
 		//Create array to holds rates
-		$rateTable = array();
+		$rateTable = [];
 		//Get rate table array
 		$rates = $this->_retrieveCurrencies();
 
@@ -100,7 +99,7 @@ class CurrencyLib {
 			if (!empty($history[$date])) {
 				return $history[$date];
 			}
-			return array();
+			return [];
 		}
 		return $history;
 	}
@@ -162,12 +161,12 @@ class CurrencyLib {
 			return $historyList;
 		}
 
-		$currencies = $this->_loadXml(self::URL_HISTORY);
+		$currencies = $this->_loadXml(static::URL_HISTORY);
 
 		// Filter down to just the rates
 		$dates = $currencies['Envelope']['Cube']['Cube'];
 
-		$historyList = array();
+		$historyList = [];
 		foreach ($dates as $date) {
 			$time = $date['@time'];
 			foreach ($date['Cube'] as $currency) {
@@ -192,13 +191,13 @@ class CurrencyLib {
 		}
 
 		// Retrieve rates as an XML object
-		$currencies = $this->_loadXml(self::URL);
+		$currencies = $this->_loadXml(static::URL);
 
 		//Filter down to just the rates
 		$currencies = $currencies['Envelope']['Cube']['Cube']['Cube'];
 
 		//Create an array to hold the rates
-		$currencyList = array();
+		$currencyList = [];
 		//European Central bank gives us everything against Euro so add this manually
 		$currencyList[$this->baseCurrency] = 1;
 		//Now iterate through and add the rates provided
@@ -218,7 +217,7 @@ class CurrencyLib {
 	protected function _getBitcoin() {
 		App::uses('CurrencyBitcoinLib', 'Tools.Lib');
 		$Btc = new CurrencyBitcoinLib();
-		return $Btc->rate(array('currency' => $this->baseCurrency));
+		return $Btc->rate(['currency' => $this->baseCurrency]);
 	}
 
 	/**
@@ -252,7 +251,7 @@ class CurrencyLib {
 		return Xml::toArray($CurrencyXml);
 	}
 
-	public $currencies = array(
+	public $currencies = [
 		'AFA' => 'Afghanistan Afghani',
 		'ALL' => 'Albanian Lek',
 		'DZD' => 'Algerian Dinar',
@@ -404,6 +403,6 @@ class CurrencyLib {
 		'YUM' => 'Yugoslav Dinar',
 		'ZMK' => 'Zambian Kwacha',
 		'ZWD' => 'Zimbabwe Dollar',
-	);
+	];
 
 }

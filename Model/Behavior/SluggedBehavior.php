@@ -3,10 +3,11 @@
  * @copyright Copyright (c) 2008, Andy Dawson
  * @author Andy Dawson
  * @author Mark Scherer
- * @license http://www.opensource.org/licenses/mit-license.php The MIT License
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 
 App::uses('ModelBehavior', 'Model');
+App::uses('ShimModel', 'Shim.Model');
 
 /**
  * SluggedBehavior
@@ -47,7 +48,7 @@ class SluggedBehavior extends ModelBehavior {
 	 *
 	 * @var array
 	 */
-	protected $_defaultConfig = array(
+	protected $_defaultConfig = [
 		'label' => null,
 		'slugField' => 'slug',
 		'overwriteField' => 'overwrite_slug',
@@ -59,18 +60,18 @@ class SluggedBehavior extends ModelBehavior {
 		'unique' => false,
 		'notices' => true,
 		'case' => null,
-		'replace' => array(
+		'replace' => [
 			'&' => 'and',
 			'+' => 'and',
 			'#' => 'hash',
-		),
+		],
 		'run' => 'beforeValidate',
 		'language' => null,
 		'encoding' => null,
 		'trigger' => null,
-		'scope' => array(),
+		'scope' => [],
 		'currencies' => false,
-	);
+	];
 
 	/**
 	 * Setup method
@@ -82,14 +83,14 @@ class SluggedBehavior extends ModelBehavior {
 	 * @param array $config
 	 * @return void
 	 */
-	public function setup(Model $Model, $config = array()) {
-		$defaults = array(
+	public function setup(Model $Model, $config = []) {
+		$defaults = [
 			'notices' => Configure::read('debug'),
-			'label' => array($Model->displayField)
-		);
+			'label' => [$Model->displayField]
+		];
 		$defaults += $this->_defaultConfig;
 		foreach ($defaults['replace'] as $key => $value) {
-			$defaults['replace'][$key] = __($value);
+			$defaults['replace'][$key] = __d('tools', $value);
 		}
 
 		$config += (array)Configure::read('Slugged');
@@ -135,7 +136,7 @@ class SluggedBehavior extends ModelBehavior {
 	 * @param array $options
 	 * @return bool Success
 	 */
-	protected function _beforeCallback($callback, Model $Model, $options = array()) {
+	protected function _beforeCallback($callback, Model $Model, $options = []) {
 		extract($this->settings[$Model->alias]);
 		if ($run !== $callback) {
 			return true;
@@ -156,7 +157,7 @@ class SluggedBehavior extends ModelBehavior {
 	 * @param array $options
 	 * @return bool Success
 	 */
-	public function beforeValidate(Model $Model, $options = array()) {
+	public function beforeValidate(Model $Model, $options = []) {
 		return $this->_beforeCallback('beforeValidate', $Model, $options);
 	}
 
@@ -167,7 +168,7 @@ class SluggedBehavior extends ModelBehavior {
 	 * @param array $options
 	 * @return bool Success
 	 */
-	public function beforeSave(Model $Model, $options = array()) {
+	public function beforeSave(Model $Model, $options = []) {
 		return $this->_beforeCallback('beforeSave', $Model, $options);
 	}
 
@@ -203,7 +204,7 @@ class SluggedBehavior extends ModelBehavior {
 				if (!$somethingToDo) {
 					return;
 				}
-				$slug = array();
+				$slug = [];
 				foreach ($label as $field) {
 					$alias = $Model->alias;
 					if (strpos($field, '.')) {
@@ -211,11 +212,12 @@ class SluggedBehavior extends ModelBehavior {
 					}
 					if (isset($Model->data[$alias][$field])) {
 						if (is_array($Model->data[$alias][$field])) {
-							return $this->_multiSlug($Model);
+							$this->_multiSlug($Model);
+							return;
 						}
 						$slug[] = $Model->data[$alias][$field];
 					} elseif ($Model->id) {
-						$slug[] = $Model->field($field);
+						$slug[] = $Model instanceof ShimModel ? $Model->fieldByConditions($field, ['id' => $Model->id]) : $Model->field($field);
 					}
 				}
 				$slug = implode($slug, $separator);
@@ -223,7 +225,7 @@ class SluggedBehavior extends ModelBehavior {
 				$slug = $this->display($Model);
 			}
 			$slug = $Model->slug($slug);
-			$this->_addToWhitelist($Model, array($slugField));
+			$this->_addToWhitelist($Model, [$slugField]);
 			$Model->data[$Model->alias][$slugField] = $slug;
 		}
 	}
@@ -247,7 +249,7 @@ class SluggedBehavior extends ModelBehavior {
 		extract($this->settings[$Model->alias]);
 		$this->_setEncoding($Model, $encoding, $string, !Configure::read('debug'));
 
-		$string = str_replace(array("\r\n", "\r", "\n"), ' ', $string);
+		$string = str_replace(["\r\n", "\r", "\n"], ' ', $string);
 		if ($replace) {
 			$string = str_replace(array_keys($replace), array_values($replace), $string);
 		}
@@ -281,7 +283,7 @@ class SluggedBehavior extends ModelBehavior {
 			} else {
 				$slug = mb_strtolower($slug);
 			}
-			if (in_array($case, array('title', 'camel'))) {
+			if (in_array($case, ['title', 'camel'])) {
 				$words = explode($separator, $slug);
 				foreach ($words as $i => &$word) {
 					$firstChar = mb_substr($word, 0, 1);
@@ -297,7 +299,7 @@ class SluggedBehavior extends ModelBehavior {
 			}
 		}
 		if ($unique) {
-			$conditions = array($Model->alias . '.' . $slugField => $slug);
+			$conditions = [$Model->alias . '.' . $slugField => $slug];
 			$conditions = array_merge($conditions, $this->settings[$Model->alias]['scope']);
 			if ($Model->id) {
 				$conditions['NOT'][$Model->alias . '.' . $Model->primaryKey] = $Model->id;
@@ -305,7 +307,7 @@ class SluggedBehavior extends ModelBehavior {
 			$i = 0;
 			$suffix = '';
 
-			while ($Model->hasAny($conditions)) {
+			while ((bool)$Model->find('count', ['conditions' => $conditions, 'recursive' => -1])) {
 				$i++;
 				$suffix	= $separator . $i;
 				if ($length && strlen($slug . $suffix) > $length) {
@@ -330,21 +332,21 @@ class SluggedBehavior extends ModelBehavior {
 	 * @return string
 	 */
 	protected function _slug(Model $Model, $string, $separator) {
-		$currencies = array(
+		$currencies = [
 			'$' => 'USD',
 			'€' => 'EUR',
 			'£' => 'GBP',
 			'¥' => 'JPY',
-		);
+		];
 		if ($this->settings[$Model->alias]['currencies']) {
 			if (is_array($this->settings[$Model->alias]['currencies'])) {
 				$currencies = $this->settings[$Model->alias]['currencies'] + $currencies;
 			}
 			$string = str_replace(array_keys($currencies), array_values($currencies), $string);
 		}
-		$symbolMap = array(
+		$symbolMap = [
 			'©' => 'c'
-		);
+		];
 		$string = str_replace(array_keys($symbolMap), array_values($symbolMap), $string);
 		return Inflector::slug($string, $separator);
 	}
@@ -367,10 +369,10 @@ class SluggedBehavior extends ModelBehavior {
 			}
 			$id = $Model->id;
 		}
-		$conditions = array_merge(array(
-			$Model->alias . '.' . $Model->primaryKey => $id),
+		$conditions = array_merge([
+			$Model->alias . '.' . $Model->primaryKey => $id],
 			$this->settings[$Model->alias]['scope']);
-		return current($Model->find('list', array('conditions' => $conditions)));
+		return current($Model->find('list', ['conditions' => $conditions]));
 	}
 
 	/**
@@ -380,26 +382,25 @@ class SluggedBehavior extends ModelBehavior {
 	 * limit is set to allow a minimum 100 updates per second as a preventative measure.
 	 *
 	 * @param AppModel $Model
-	 * @param array $conditions
-	 * @param int $recursive
+	 * @param array $params
 	 * @return bool Success
 	 */
-	public function resetSlugs(Model $Model, $params = array()) {
+	public function resetSlugs(Model $Model, $params = []) {
 		$recursive = -1;
 		extract($this->settings[$Model->alias]);
 		if ($notices && !$Model->hasField($slugField)) {
 			return false;
 		}
-		$defaults = array(
+		$defaults = [
 			'page' => 1,
 			'limit' => 100,
-			'fields' => array_merge(array($Model->primaryKey), $label),
+			'fields' => array_merge([$Model->primaryKey], $label),
 			'order' => $Model->displayField . ' ASC',
 			'conditions' => $scope,
 			'recursive' => $recursive,
 			'overwrite' => true,
-		);
-		$params = array_merge($defaults, $params);
+		];
+		$params += $defaults;
 		$count = $Model->find('count', compact('conditions'));
 		$max = ini_get('max_execution_time');
 		if ($max) {
@@ -412,10 +413,10 @@ class SluggedBehavior extends ModelBehavior {
 		while ($rows = $Model->find('all', $params)) {
 			foreach ($rows as $row) {
 				$Model->create();
-				$options = array(
+				$options = [
 					'validate' => true,
-					'fieldList' => array_merge(array($Model->primaryKey, $slugField), $label)
-				);
+					'fieldList' => array_merge([$Model->primaryKey, $slugField], $label)
+				];
 				if (!$Model->save($row, $options)) {
 					throw new RuntimeException(print_r($row[$Model->alias], true) . ': ' . print_r($Model->validationErrors, true));
 				}
@@ -457,7 +458,7 @@ class SluggedBehavior extends ModelBehavior {
 	 * @param mixed $replace
 	 * @param mixed $string
 	 * @param string $encoding
-	 * @return void
+	 * @return string
 	 */
 	protected function _pregReplace($pattern, $replace, $string, $encoding = 'UTF-8') {
 		if ($encoding && $encoding !== 'UTF-8') {

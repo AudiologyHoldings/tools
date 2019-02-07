@@ -1,13 +1,13 @@
 <?php
 
-App::import('CodeKey', 'Tools.Model');
+App::uses('CodeKey', 'Tools.Model');
 App::uses('MyCakeTestCase', 'Tools.TestSuite');
 
 class CodeKeyTest extends MyCakeTestCase {
 
 	public $CodeKey = null;
 
-	public $fixtures = array('plugin.tools.code_key');
+	public $fixtures = ['plugin.tools.code_key'];
 
 	public function setUp() {
 		parent::setUp();
@@ -45,13 +45,13 @@ class CodeKeyTest extends MyCakeTestCase {
 	}
 
 	public function testGarbageCollector() {
-		$data = array(
+		$data = [
 			'created' => date(FORMAT_DB_DATETIME, time() - 3 * MONTH),
 			'type' => 'y',
 			'key' => 'x'
-		);
+		];
 		$this->CodeKey->create();
-		$this->CodeKey->save($data, array('validate' => false));
+		$this->CodeKey->save($data, ['validate' => false]);
 		$count = $this->CodeKey->find('count');
 		$this->CodeKey->garbageCollector();
 		$count2 = $this->CodeKey->find('count');

@@ -11,7 +11,6 @@
  *
  * @modified 2011-11-13 Mark Scherer
  * @php 5
- * @cakephp 2.x
  *
  * ImapLib for accessing IMAP and POP email accounts
  */
@@ -35,7 +34,7 @@ class ImapLib {
 
 	public $stream;
 
-	public $settings = array(
+	public $settings = [
 		self::S_MAILBOX => 'INBOX',
 		self::S_SERVER => '',
 		self::S_PORT => '',
@@ -51,9 +50,9 @@ class ImapLib {
 		self::S_TLS => false,
 		self::S_NOTLS => false,
 		self::S_READONLY => false
-	);
+	];
 
-	public $currentSettings = array();
+	public $currentSettings = [];
 
 	public $currentRef = '';
 
@@ -70,53 +69,53 @@ class ImapLib {
 	 * @param array $data
 	 * @return string
 	 */
-	public function buildConnector($data = array()) {
+	public function buildConnector($data = []) {
 		$data = array_merge($this->settings, $data);
 		$string = '{';
-		$string .= $data[self::S_SERVER];
-		if ($data[self::S_PORT]) {
-			$string .= ':' . $data[self::S_PORT];
+		$string .= $data[static::S_SERVER];
+		if ($data[static::S_PORT]) {
+			$string .= ':' . $data[static::S_PORT];
 		}
-		if ($data[self::S_SERVICE]) {
-			$string .= '/service=' . $data[self::S_SERVICE];
+		if ($data[static::S_SERVICE]) {
+			$string .= '/service=' . $data[static::S_SERVICE];
 		}
-		if ($data[self::S_USER]) {
-			$string .= '/user=' . $data[self::S_USER];
+		if ($data[static::S_USER]) {
+			$string .= '/user=' . $data[static::S_USER];
 		} else {
 			$string .= '/anonymous';
 		}
-		if ($data[self::S_AUTHUSER]) {
-			$string .= '/authuser=' . $data[self::S_AUTHUSER];
+		if ($data[static::S_AUTHUSER]) {
+			$string .= '/authuser=' . $data[static::S_AUTHUSER];
 		}
-		if ($data[self::S_DEBUG]) {
+		if ($data[static::S_DEBUG]) {
 			$string .= '/debug';
 		}
-		if ($data[self::S_SECURE]) {
+		if ($data[static::S_SECURE]) {
 			$string .= '/secure';
 		}
-		if ($data[self::S_NORSH]) {
+		if ($data[static::S_NORSH]) {
 			$string .= '/norsh';
 		}
-		if ($data[self::S_SSL]) {
+		if ($data[static::S_SSL]) {
 			$string .= '/ssl';
 		}
-		if ($data[self::S_VALIDATECERT]) {
+		if ($data[static::S_VALIDATECERT]) {
 			$string .= '/validate-cert';
 		} else {
 			$string .= '/novalidate-cert';
 		}
-		if ($data[self::S_TLS]) {
+		if ($data[static::S_TLS]) {
 			$string .= '/tls';
 		}
-		if ($data[self::S_NOTLS]) {
+		if ($data[static::S_NOTLS]) {
 			$string .= '/notls';
 		}
-		if ($data[self::S_READONLY]) {
+		if ($data[static::S_READONLY]) {
 			$string .= '/readonly';
 		}
 		$string .= '}';
 
-		$string .= $data[self::S_MAILBOX];
+		$string .= $data[static::S_MAILBOX];
 
 		$this->currentRef = $string;
 		$this->currentSettings = $data;
@@ -147,12 +146,12 @@ class ImapLib {
 	 * @return bool Success
 	 */
 	public function connect($user, $pass, $server, $port = null) {
-		$this->settings[self::S_SERVER] = $server;
-		if ($port || !$port && $this->settings[self::S_SERVICE] === 'imap') {
-			$this->settings[self::S_PORT] = $port;
+		$this->settings[static::S_SERVER] = $server;
+		if ($port || !$port && $this->settings[static::S_SERVICE] === 'imap') {
+			$this->settings[static::S_PORT] = $port;
 		}
-		$this->settings[self::S_USER] = $user;
-		$this->settings[self::S_PASSWORD] = $pass;
+		$this->settings[static::S_USER] = $user;
+		$this->settings[static::S_PASSWORD] = $pass;
 		$connector = $this->buildConnector();
 
 		//$options = OP_DEBUG;
@@ -223,8 +222,8 @@ class ImapLib {
 	 *
 	 * @return array
 	 */
-	public function msgList($msgList = array()) {
-		$return = array();
+	public function msgList($msgList = []) {
+		$return = [];
 
 		if (empty($msgList)) {
 			$count = $this->msgCount();
@@ -242,7 +241,6 @@ class ImapLib {
 							}
 						}
 					}
-
 				}
 
 				//lets add attachments
@@ -297,11 +295,11 @@ class ImapLib {
 	public function attachments($header) {
 		$structure = imap_fetchstructure($this->stream, $header->Msgno);
 		if (!$structure || !isset($structure->parts)) {
-			return array();
+			return [];
 		}
 		$parts = $structure->parts;
 		$fpos = 2;
-		$message = array();
+		$message = [];
 		$message["attachment"]["type"][0] = 'text';
 		$message["attachment"]["type"][1] = 'multipart';
 		$message["attachment"]["type"][2] = 'message';
@@ -311,10 +309,10 @@ class ImapLib {
 		$message["attachment"]["type"][6] = 'video';
 		$message["attachment"]["type"][7] = 'other';
 
-		$attachments = array();
+		$attachments = [];
 		$count = count($parts);
 		for ($i = 1; $i < $count; $i++) {
-			$attachment = array();
+			$attachment = [];
 			$part = $parts[$i];
 			if (isset($part->disposition) && $part->disposition === 'ATTACHMENT') {
 				$attachment["pid"] = $i;
@@ -330,7 +328,6 @@ class ImapLib {
 
 				$fpos++;
 				$attachments[] = $attachment;
-
 			} elseif (isset($part->subtype) && $part->subtype === "OCTET-STREAM") {
 				$attachment["pid"] = $i;
 				$attachment["type"][$i] = $message["attachment"]["type"][$part->type] . "/" . strtolower($part->subtype);
@@ -345,7 +342,6 @@ class ImapLib {
 
 				$fpos++;
 				$attachments[] = $attachment;
-
 			} else { // inline attachments etc
 				$attachment["pid"] = $i;
 				$type = '';
@@ -407,7 +403,7 @@ class ImapLib {
 	 */
 	protected function _decode7Bit($text) {
 		// Manually convert common encoded characters into their UTF-8 equivalents.
-		$characters = array(
+		$characters = [
 			'=20' => ' ', // space.
 			'=E2=80=99' => "'", // single quote.
 			'=0A' => "\r\n", // line break.
@@ -416,7 +412,7 @@ class ImapLib {
 			"=\r\n" => '', // joined line.
 			'=E2=80=A6' => '…', // ellipsis.
 			'=E2=80=A2' => '•', // bullet.
-		);
+		];
 		foreach ($characters as $key => $value) {
 			$text = str_replace($key, $value, $text);
 		}
@@ -496,7 +492,7 @@ class ImapLib {
 		// Let's delete multiple emails
 		if (count($emails) > 0) {
 			$deleteString = '';
-			$emailError = array();
+			$emailError = [];
 			foreach ($emails as $email) {
 				if ($delete) {
 					if (!imap_delete($this->stream, $email)) {
@@ -666,7 +662,7 @@ class ImapMessageInfoLib {
 
 	public function __construct($ImapFolder, $data) {
 		if (!is_object($data)) {
-			$list = new ImapMessagesListLib($ImapFolder, array($data));
+			$list = new ImapMessagesListLib($ImapFolder, [$data]);
 			$list = $list->overview(false);
 			$data = $list[0];
 		}
@@ -696,9 +692,9 @@ class ImapMessageInfoLib {
 			return $this->seen;
 		}
 		if ($set) {
-			return $this->flag(self::BS . 'Seen');
+			return $this->flag(static::BS . 'Seen');
 		}
-		return $this->unFlag(self::BS . 'Seen');
+		return $this->unFlag(static::BS . 'Seen');
 	}
 
 	public function answered($set = null) {
@@ -706,9 +702,9 @@ class ImapMessageInfoLib {
 			return $this->answered;
 		}
 		if ($set) {
-			return $this->flag(self::BS . 'Answered');
+			return $this->flag(static::BS . 'Answered');
 		}
-		return $this->unFlag(self::BS . 'Answered');
+		return $this->unFlag(static::BS . 'Answered');
 	}
 
 	public function flagged($set = null) {
@@ -716,9 +712,9 @@ class ImapMessageInfoLib {
 			return $this->flagged;
 		}
 		if ($set) {
-			return $this->flag(self::BS . 'Flagged');
+			return $this->flag(static::BS . 'Flagged');
 		}
-		return $this->unFlag(self::BS . 'Flagged');
+		return $this->unFlag(static::BS . 'Flagged');
 	}
 
 	public function deleted($set = null) {
@@ -726,9 +722,9 @@ class ImapMessageInfoLib {
 			return $this->deleted;
 		}
 		if ($set) {
-			return $this->flag(self::BS . 'Deleted');
+			return $this->flag(static::BS . 'Deleted');
 		}
-		return $this->unFlag(self::BS . 'Deleted');
+		return $this->unFlag(static::BS . 'Deleted');
 	}
 
 	public function draft($set = null) {
@@ -736,9 +732,9 @@ class ImapMessageInfoLib {
 			return $this->draft;
 		}
 		if ($set) {
-			return $this->flag(self::BS . 'Draft');
+			return $this->flag(static::BS . 'Draft');
 		}
-		return $this->unFlag(self::BS . 'Draft');
+		return $this->unFlag(static::BS . 'Draft');
 	}
 
 }
@@ -788,7 +784,7 @@ class ImapMessagesListLib {
 
 	public $ImapFolder;
 
-	public $messageUIDs = array();
+	public $messageUIDs = [];
 
 	public function __construct($ImapFolder, $messageUIDs) {
 		$this->ImapFolder = $ImapFolder;
@@ -813,7 +809,7 @@ class ImapMessagesListLib {
 		//CHANGE DIR TO CURRENT
 		$overview = imap_fetch_overview($this->ImapFolder->Imap->stream, implode(',', $this->messageUIDs), FT_UID);
 		if ($returnInfo) {
-			$msgObjs = array();
+			$msgObjs = [];
 			foreach ($overview as $info) {
 				$msgObjs[] = new ImapMessageInfoLib($this->ImapFolder, $info);
 			}
@@ -863,7 +859,7 @@ class ImapFolderLib {
 	public function listFolder() {
 	}
 
-	public function searchMessages($options = array(self::ALL)) {
+	public function searchMessages($options = [self::ALL]) {
 		$optionstring = '';
 		foreach ($options as $key => $value) {
 			if (is_int($key)) {
@@ -871,7 +867,7 @@ class ImapFolderLib {
 				$value = null;
 			}
 			switch ($key) {
-				case self::S_FROM:
+				case static::S_FROM:
 					$param = '"' . $value . '" ';
 					break;
 				default:

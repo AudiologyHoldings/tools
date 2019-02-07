@@ -11,7 +11,7 @@ App::uses('ModelBehavior', 'Model');
  * Redistributions of files must retain the above copyright notice.
  *
  * @author Ariel Patschiki, Daniel L. Pakuschewski
- * @license MIT License (http://www.opensource.org/licenses/mit-license.php)
+ * @license http://opensource.org/licenses/mit-license.php MIT
  * @copyright Copyright 2010, MobVox Solu??es Digitais.
  * @version 0.1
  */
@@ -36,7 +36,7 @@ class CustomFindsBehavior extends ModelBehavior {
 	protected function _verifyContainable(Model $Model, $query) {
 		if (is_array($Model->actsAs) && in_array('Containable', $Model->actsAs) && isset($query['contain'])) {
 			if (array_search('CustomFinds', $Model->actsAs) > array_search('Containable', $Model->actsAs)) {
-				trigger_error(__('The behavior "Containable", if used together with "CustomFinds" needs to be loaded before.'), E_USER_WARNING);
+				trigger_error('The behavior "Containable", if used together with "CustomFinds" needs to be loaded before.', E_USER_WARNING);
 			}
 		}
 	}

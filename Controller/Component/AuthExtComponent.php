@@ -17,8 +17,7 @@ App::uses('AuthComponent', 'Controller/Component');
  * - dynamic login scope validation
  *
  * @author Mark Scherer
- * @cakephp 2.x
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class AuthExtComponent extends AuthComponent {
 
@@ -28,30 +27,31 @@ class AuthExtComponent extends AuthComponent {
 
 	public $fieldKey = 'role_id';
 
-	public $loginAction = array('controller' => 'account', 'action' => 'login', 'admin' => false, 'plugin' => false);
+	public $loginAction = ['controller' => 'account', 'action' => 'login', 'admin' => false, 'plugin' => false];
 
-	public $loginRedirect = array('controller' => 'overview', 'action' => 'home', 'admin' => false, 'plugin' => false);
+	public $loginRedirect = ['controller' => 'overview', 'action' => 'home', 'admin' => false, 'plugin' => false];
 
 	public $autoRedirect = false;
 
 	public $loginError = null;
 
-	protected $_defaults = array(
+	protected $_defaultConfig = [
 		'multi' => null, # null=auto - yes/no multiple roles (HABTM table between users and roles)
 		'parentModelAlias' => USER_ROLE_KEY,
 		'userModel' => CLASS_USER //TODO: allow plugin syntax
-	);
+	];
 
 	/**
 	 * Merge in Configure::read('Auth') settings
 	 *
-	 * @param mixed $Collection
-	 * @param mixed $settings
+	 * @param ComponentCollection $Collection
+	 * @param array $config
 	 */
-	public function __construct(ComponentCollection $Collection, $settings = array()) {
-		$settings = array_merge($this->_defaults, (array)Configure::read('Auth'), $settings);
+	public function __construct(ComponentCollection $Collection, $config = []) {
+		$defaults = (array)Configure::read('Auth') + $this->_defaultConfig;
+		$config += $defaults;
 
-		parent::__construct($Collection, $settings);
+		parent::__construct($Collection, $config);
 	}
 
 	public function initialize(Controller $Controller) {
@@ -77,53 +77,53 @@ class AuthExtComponent extends AuthComponent {
 		$user = $this->completeAuth($user);
 
 		if (empty($user)) {
-			$this->loginError = __('invalidLoginCredentials');
+			$this->loginError = __d('tools', 'invalidLoginCredentials');
 			return false;
 		}
 
 		// custom checks
 		if (isset($user['active'])) {
 			if (empty($user['active'])) {
-				$this->loginError = __('Account not active yet');
+				$this->loginError = __d('tools', 'Account not active yet');
 				return false;
 			}
 			if (!empty($user['suspended'])) {
-				$this->loginError = __('Account temporarily locked');
+				$this->loginError = __d('tools', 'Account temporarily locked');
 				if (!empty($user['suspended_reason'])) {
-					$this->loginError .= BR . BR . __('Reason') . ':' . BR . nl2br(h($user['suspended_reason']));
+					$this->loginError .= BR . BR . __d('tools', 'Reason') . ':' . BR . nl2br(h($user['suspended_reason']));
 				}
 				return false;
 			}
 		} else {
 			if (isset($user['status']) && empty($user['status'])) {
-				$this->loginError = __('Account not active yet');
+				$this->loginError = __d('tools', 'Account not active yet');
 				return false;
 			}
 			if (isset($user['status']) && defined('User::STATUS_PENDING') && $user['status'] == User::STATUS_PENDING) {
-				$this->loginError = __('Account not active yet');
+				$this->loginError = __d('tools', 'Account not active yet');
 				return false;
 			}
 			if (isset($user['status']) && defined('User::STATUS_SUSPENDED') && $user['status'] == User::STATUS_SUSPENDED) {
-				$this->loginError = __('Account temporarily locked');
+				$this->loginError = __d('tools', 'Account temporarily locked');
 				if (!empty($user['suspended_reason'])) {
-					$this->loginError .= BR . BR . __('Reason') . ':' . BR . nl2br(h($user['suspended_reason']));
+					$this->loginError .= BR . BR . __d('tools', 'Reason') . ':' . BR . nl2br(h($user['suspended_reason']));
 				}
 				return false;
 			}
 			if (isset($user['status']) && defined('User::STATUS_DEL') && $user['status'] == User::STATUS_DEL) {
-				$this->loginError = __('Account deleted');
+				$this->loginError = __d('tools', 'Account deleted');
 				if (!empty($user['suspended_reason'])) {
-					$this->loginError .= BR . BR . __('Reason') . ':' . BR . nl2br(h($user['suspended_reason']));
+					$this->loginError .= BR . BR . __d('tools', 'Reason') . ':' . BR . nl2br(h($user['suspended_reason']));
 				}
 				return false;
 			}
 			if (isset($user['status']) && defined('User::STATUS_ACTIVE') && $user['status'] != User::STATUS_ACTIVE) {
-				$this->loginError = __('Unknown Error');
+				$this->loginError = __d('tools', 'Unknown Error');
 				return false;
 			}
 		}
 		if (isset($user['email_confirmed']) && empty($user['email_confirmed'])) {
-			$this->loginError = __('Email not active yet');
+			$this->loginError = __d('tools', 'Email not active yet');
 			return false;
 		}
 
@@ -137,7 +137,7 @@ class AuthExtComponent extends AuthComponent {
 			}
 
 			$this->Session->renew();
-			$this->Session->write(self::$sessionKey, $user);
+			$this->Session->write(static::$sessionKey, $user);
 		}
 		return $this->loggedIn();
 	}
@@ -151,9 +151,9 @@ class AuthExtComponent extends AuthComponent {
 		$Model = $this->getModel();
 		$userArray = $user;
 		if (!is_array($userArray)) {
-			$user = $Model->get($user);
+			$user = $Model->get($user, ['noException' => true]);
 			if (!$user) {
-				return array();
+				return [];
 			}
 			$userArray = array_shift($user);
 		}
@@ -179,8 +179,8 @@ class AuthExtComponent extends AuthComponent {
 			// only for multi
 			if ($this->settings['multi'] || !isset($userArray['role_id'])) {
 				$parentModelAlias = $this->settings['parentModelAlias'];
-				$userArray[$parentModelAlias] = array(); # default: no roles!
-				$roles = $this->{$withModel}->find('list', array('fields' => array($withModel . '.role_id'), 'conditions' => array($withModel . '.user_id' => $userArray['id'])));
+				$userArray[$parentModelAlias] = []; # default: no roles!
+				$roles = $this->{$withModel}->find('list', ['fields' => [$withModel . '.role_id'], 'conditions' => [$withModel . '.user_id' => $userArray['id']]]);
 				if (!empty($roles)) {
 					// add the suplemental roles id under the Auth session key
 					$userArray[$parentModelAlias] = $roles;

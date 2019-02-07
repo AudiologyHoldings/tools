@@ -34,8 +34,7 @@ if (!defined('WINDOWS')) {
  * - sitecopy [linux] (maybe switch to "rsync" some time...? way more powerful and reliable!)
  *
  * @author Mark Scherer
- * @license MIT
- * @cakephp 2.x
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class CopyShell extends AppShell {
 
@@ -57,27 +56,27 @@ class CopyShell extends AppShell {
 	const TYPE_VENDOR = 3;
 	const TYPE_CUSTOM = 4;
 
-	public $types = array(
+	public $types = [
 		self::TYPE_APP => 'app',
 		self::TYPE_CAKE => 'cake',
 		self::TYPE_VENDOR => 'vendor',
 		self::TYPE_PLUGIN => 'plugin',
 		self::TYPE_CUSTOM => 'custom'
-	);
+	];
 
-	public $matches = array(
+	public $matches = [
 		self::TYPE_CAKE => 'lib/Cake',
 		self::TYPE_VENDOR => 'vendors', # in root dir
 		self::TYPE_PLUGIN => 'plugins', # in root dir
-	);
+	];
 
 	public $type = self::TYPE_APP;
 
 	public $configName = null; # like "test" in "app_test" or "123" in "custom_123"
 	// both typeName and configName form the "site" name: typeName_configName
 
-	public $configCustom = array(); # configFile Content
-	public $configGlobal = array(); # configFile Content
+	public $configCustom = []; # configFile Content
+	public $configGlobal = []; # configFile Content
 
 	public $tmpFolder = null;
 
@@ -120,23 +119,23 @@ class CopyShell extends AppShell {
 
 		// change type if param given
 		if (!empty($this->params['cake'])) { # cake core
-			$this->type = self::TYPE_CAKE;
+			$this->type = static::TYPE_CAKE;
 		} elseif (!empty($this->params['vendors'])) {
-			$this->type = self::TYPE_VENDOR;
+			$this->type = static::TYPE_VENDOR;
 		} elseif (!empty($this->params['plugins'])) {
-			$this->type = self::TYPE_PLUGIN;
+			$this->type = static::TYPE_PLUGIN;
 		}
 		$this->out($this->types[$this->type]);
 
 		// find all mathing configs to this type
-		$configs = array();
+		$configs = [];
 		if (!empty($configContent)) {
 			$configs = $this->getConfigNames($configContent);
 		}
 		$this->out('' . count($configs) . ' of ' . $this->configCount . ' configs match:');
 		$this->out('');
 
-		$connections = array();
+		$connections = [];
 
 		if (!empty($configs)) {
 			//$connections = array_keys($configs); # problems with 0 (mistake in shell::in())
@@ -160,7 +159,7 @@ class CopyShell extends AppShell {
 		*/
 		} else {
 			array_unshift($connections, 'q', 'h');
-			$connection = $this->in(__('Use Sitecopy Config ([q] to quit, [h] for help)') . ':', $connections, 'q');
+			$connection = $this->in('Use Sitecopy Config ([q] to quit, [h] for help)' . ':', $connections, 'q');
 		}
 
 		$this->out('');
@@ -211,7 +210,7 @@ class CopyShell extends AppShell {
 
 		// display custom content
 		//$this->out('CUSTOM CONFIG (may override global config):');
-		$this->credentials = array();
+		$this->credentials = [];
 
 		foreach ($configuration as $c) {
 			if ($rF = $this->isRemotePath($c)) {
@@ -262,7 +261,7 @@ class CopyShell extends AppShell {
 		// create tmp config file (adding the current APP path, of no local path was given inside the config file)
 		$File = new File($this->tmpFolder . $this->tmpFile, true, 0770);
 		//$File->open();
-		$configTotal = array();
+		$configTotal = [];
 		// extract "side xyz" from config, add global and then the rest of custom
 		$configTotal[] = 'site ' . $this->types[$this->type] . '_' . $this->configName;//$configuration[0];
 		unset($configuration[0]);
@@ -283,7 +282,7 @@ class CopyShell extends AppShell {
 			$this->out('');
 			$this->out('Type: ' . $this->types[$this->type]);
 			$this->out('');
-			$allowedActions = array('i', 'c', 'l', 'f', 'u', 's');
+			$allowedActions = ['i', 'c', 'l', 'f', 'u', 's'];
 
 			if (isset($this->args[1])) {
 				$action = strtolower(trim($this->args[1]));
@@ -295,7 +294,7 @@ class CopyShell extends AppShell {
 				$this->args[0] = null; # only the first time
 			}
 			if (empty($action) || !in_array($action, $allowedActions)) {
-				$action = strtolower($this->in(__('Init, Catchup, List, Fetch, Update, Synch (or [q] to quit)') . ':', array_merge($allowedActions, array('q')), 'l'));
+				$action = strtolower($this->in('Init, Catchup, List, Fetch, Update, Synch (or [q] to quit)' . ':', array_merge($allowedActions, ['q']), 'l'));
 			}
 
 			if ($action === 'q') {
@@ -304,14 +303,14 @@ class CopyShell extends AppShell {
 			if (in_array($action, $allowedActions)) {
 				// synch can destroy local information that might not have been saved yet, so confirm
 				if ($action === 's') {
-					$continue = $this->in(__('Local files might be overridden... Continue?'), array('y', 'n'), 'n');
+					$continue = $this->in('Local files might be overridden... Continue?', ['y', 'n'], 'n');
 					if (strtolower($continue) !== 'y' && strtolower($continue) !== 'yes') {
 						$action = '';
 						continue;
 					}
 				}
 
-				$options = array();
+				$options = [];
 				$options[] = '--show-progress';
 
 				if (!empty($this->params['force'])) {
@@ -329,7 +328,7 @@ class CopyShell extends AppShell {
 	/**
 	 * Only main functions covered - see "sitecopy --help" for more information
 	 */
-	protected function _execute($config = null, $action = null, $options = array()) {
+	protected function _execute($config = null, $action = null, $options = []) {
 		$options[] = '--debug=ftp,socket --rcfile=' . $this->tmpFolder . $this->tmpFile .
 			' --storepath=' . $this->tmpFolder . ' --logfile=' . $this->tmpFolder . $this->logFile;
 		if (!empty($action)) {
@@ -429,7 +428,6 @@ class CopyShell extends AppShell {
 		//$sound = 'sndrec32 /play /close "'.$this->scriptFolder.'files'.DS.'notify.wav';
 		//system($sound);
 		if (WINDOWS) {
-
 		} else {
 			exec('echo -e "\a"');
 		}
@@ -438,7 +436,7 @@ class CopyShell extends AppShell {
 	/**
 	 * @return bool Success
 	 */
-	protected function _exec($silent = true, $options = array()) {
+	protected function _exec($silent = true, $options = []) {
 		// make sure, folder exists
 		$Folder = new Folder($this->tmpFolder, true, 0770);
 
@@ -479,12 +477,12 @@ class CopyShell extends AppShell {
 		$this->out("\ts: Synch (Get remote content and override local files");
 		$this->out("");
 
-		$continue = $this->in(__('Show script help, too?'), array('y', 'n'), 'y');
+		$continue = $this->in('Show script help, too?', ['y', 'n'], 'y');
 		if (strtolower($continue) === 'y' || strtolower($continue) === 'yes') {
 			// somehow does not work yet (inside cake console anyway...)
-			$this->_exec(false, array('--help'));
+			$this->_exec(false, ['--help']);
 			$this->out('');
-			$this->_exec(false, array('--version'));
+			$this->_exec(false, ['--version']);
 		}
 		return $this->_stop();
 	}
@@ -501,7 +499,7 @@ class CopyShell extends AppShell {
 			$content = explode(NL, $content);
 
 			if (!empty($content)) {
-				$configGlobal = array();
+				$configGlobal = [];
 				foreach ($content as $line => $c) {
 					$c = trim($c);
 					if (!empty($c)) {
@@ -523,15 +521,15 @@ class CopyShell extends AppShell {
 		// Read out configs
 		$content = $File->read();
 		if (empty($content)) {
-			return array();
+			return [];
 		}
 		$content = explode(NL, $content);
 
 		if (empty($content)) {
-			return array();
+			return [];
 		}
 
-		$configContent = array();
+		$configContent = [];
 		foreach ($content as $line => $c) {
 			$c = trim($c);
 			if (!empty($c)) {
@@ -548,7 +546,7 @@ class CopyShell extends AppShell {
 	 * checks on whether all config names are valid!
 	 */
 	protected function getConfigNames($content) {
-		$configs = array();
+		$configs = [];
 		foreach ($content as $c) {
 			if (mb_strlen($c) > 6 && trim(mb_substr($c, 0, 5)) === 'site') {
 				$config = trim(str_replace('site ', '', $c));
@@ -573,7 +571,7 @@ class CopyShell extends AppShell {
 	 * (like updating right away on "cake copy u", if u is supposed to be the config name...)
 	 */
 	protected function isValidConfigName($name) {
-		$reservedWords = array('i', 'c', 'l', 'f', 'u', 's');
+		$reservedWords = ['i', 'c', 'l', 'f', 'u', 's'];
 		if (in_array($name, $reservedWords)) {
 			return false;
 		}
@@ -606,9 +604,10 @@ class CopyShell extends AppShell {
 	 *
 	 * @param string $config name
 	 * @param array $content
+	 * @return array
 	 */
 	protected function getConfig($config, $content) {
-		$configs = array();
+		$configs = [];
 		$started = false;
 		foreach ($content as $c) {
 			if (mb_strlen($c) > 6 && substr($c, 0, 5) === 'site ') {
@@ -636,73 +635,73 @@ class CopyShell extends AppShell {
 	}
 
 	public function getOptionParser() {
-		$subcommandParser = array(
-			'options' => array(
+		$subcommandParser = [
+			'options' => [
 				/*
 				'plugin' => array(
 					'short' => 'g',
-					'help' => __d('cake_console', 'The plugin to update. Only the specified plugin will be updated.'),
+					'help' => 'The plugin to update. Only the specified plugin will be updated.'),
 					'default' => ''
 				),
 				'dry-run'=> array(
 					'short' => 'd',
-					'help' => __d('cake_console', 'Dry run the update, no files will actually be modified.'),
+					'help' => 'Dry run the update, no files will actually be modified.'),
 					'boolean' => true
 				),
 				'log'=> array(
 					'short' => 'l',
-					'help' => __d('cake_console', 'Log all ouput to file log.txt in TMP dir'),
+					'help' => 'Log all ouput to file log.txt in TMP dir'),
 					'boolean' => true
 				),
 				*/
-				'silent' => array(
+				'silent' => [
 					'short' => 's',
-					'help' => __d('cake_console', 'Silent mode (no beep sound)'),
+					'help' => 'Silent mode (no beep sound)',
 					'boolean' => true
-				),
-				'vendors' => array(
+				],
+				'vendors' => [
 					'short' => 'e',
-					'help' => __d('cake_console', 'ROOT/vendor'),
+					'help' => 'ROOT/vendor',
 					'boolean' => true
-				),
-				'cake' => array(
+				],
+				'cake' => [
 					'short' => 'c',
-					'help' => __d('cake_console', 'ROOT/lib/Cake'),
+					'help' => 'ROOT/lib/Cake',
 					'boolean' => true
-				),
-				'app' => array(
+				],
+				'app' => [
 					'short' => 'a',
-					'help' => __d('cake_console', 'ROOT/app'),
+					'help' => 'ROOT/app',
 					'boolean' => true
-				),
-				'plugins' => array(
+				],
+				'plugins' => [
 					'short' => 'p',
-					'help' => __d('cake_console', 'ROOT/plugin'),
+					'help' => 'ROOT/plugin',
 					'boolean' => true
-				),
-				'custom' => array(
+				],
+				'custom' => [
 					'short' => 'u',
-					'help' => __d('cake_console', 'custom'),
+					'help' => 'Custom path',
 					'boolean' => true
-				),
-				'force' => array(
+				],
+				'force' => [
 					'short' => 'f',
-					'help' => __d('cake_console', 'force (keep going regardless of errors)'),
+					'help' => 'Force (keep going regardless of errors)',
 					'boolean' => true
-				),
-				'debug' => array(
-					'help' => __d('cake_console', 'Debug output only'),
+				],
+				'debug' => [
+					'help' => 'Debug output only',
 					'boolean' => true
-				)
-			)
-		);
+				]
+			]
+		];
 
 		return parent::getOptionParser()
-			->description(__d('cake_console', "A shell to quickly upload modified files (diff) only."))
-			->addSubcommand('run', array(
-				'help' => __d('cake_console', 'Update'),
+			->description("A shell to quickly upload modified files (diff) only.")
+			->addSubcommand('run', [
+				'help' => 'Update',
 				'parser' => $subcommandParser
-			));
+			]);
 	}
 
 }

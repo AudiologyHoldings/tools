@@ -15,9 +15,8 @@ App::uses('AppShell', 'Console/Command');
  *
  * It is also possible to manually define the binPath (for Windows for example).
  *
- * @cakephp 2.x
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class ConvertShell extends AppShell {
 
@@ -26,12 +25,12 @@ class ConvertShell extends AppShell {
 	 *
 	 * @var array
 	 */
-	public $modes = array(
-		'git' => array('dos2unix', 'unix2dos'), # d2u + u2d
+	public $modes = [
+		'git' => ['dos2unix', 'unix2dos'], # d2u + u2d
 		'd2u' => 'dos2unix', 'u2d' => 'unix2dos', # dos/unix
 		'u2m' => 'unix2mac', 'm2u' => 'mac2unix', # unix/mac
-		'd2m' => array('dos2unix', 'unix2mac'), 'm2d' => array('mac2unix', 'unix2dos'), # dos/mac
-	);
+		'd2m' => ['dos2unix', 'unix2mac'], 'm2d' => ['mac2unix', 'unix2dos'], # dos/mac
+	];
 
 	/**
 	 * @var string
@@ -49,10 +48,10 @@ class ConvertShell extends AppShell {
 		$this->binPath = Configure::read('Cli.dos2unixPath');
 
 		if ($this->params['dry-run']) {
-			$this->out(__d('cake_console', '<warning>Dry-run mode enabled!</warning>'), 1, Shell::QUIET);
+			$this->out('<warning>Dry-run mode enabled!</warning>', 1, Shell::QUIET);
 		}
 		if (false && !$this->_test()) {
-			$this->out(__d('cake_console', '<warning>dos2unix not available</warning>'), 1, Shell::QUIET);
+			$this->out('<warning>dos2unix not available</warning>', 1, Shell::QUIET);
 		}
 	}
 
@@ -107,7 +106,7 @@ class ConvertShell extends AppShell {
 	 * @param mixed $excludes
 	 * @return void
 	 */
-	protected function _convert($dir, $mode, $excludes = array()) {
+	protected function _convert($dir, $mode, $excludes = []) {
 		$Iterator = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir),
 			RecursiveIteratorIterator::CHILD_FIRST);
 		foreach ($Iterator as $path) {
@@ -152,42 +151,42 @@ class ConvertShell extends AppShell {
 	 * @return ConsoleOptionParser
 	 */
 	public function getOptionParser() {
-		$subcommandParser = array(
-			'options' => array(
-				'mode' => array(
+		$subcommandParser = [
+			'options' => [
+				'mode' => [
 					'short' => 'm',
-					'help' => __d('cake_console', 'Mode'),
+					'help' => 'Mode',
 					'default' => '' # auto detect
-				),
-				'ext' => array(
+				],
+				'ext' => [
 					'short' => 'e',
-					'help' => __d('cake_console', 'Specify extensions [php|txt|...]'),
+					'help' => 'Specify extensions [php|txt|...]',
 					'default' => '',
-				),
-				'dry-run' => array(
+				],
+				'dry-run' => [
 					'short' => 'd',
-					'help' => __d('cake_console', 'Dry run the clear command, no files will actually be deleted. Should be combined with verbose!'),
+					'help' => 'Dry run the clear command, no files will actually be deleted. Should be combined with verbose!',
 					'boolean' => true
-				),
-				'exclude' => array(
+				],
+				'exclude' => [
 					'short' => 'x',
-					'help' => __d('cake_console', 'exclude the following files or folders'),
+					'help' => 'Exclude the following files or folders',
 					'boolean' => true,
 					'default' => ''
-				)
-			)
-		);
+				]
+			]
+		];
 
 		return parent::getOptionParser()
-			->description(__d('cake_console', "The Convert Shell converts files from dos/unix/mac to another system"))
-			->addSubcommand('version', array(
-				'help' => __d('cake_console', 'Test and display version.'),
+			->description("The Convert Shell converts files from dos/unix/mac to another system")
+			->addSubcommand('version', [
+				'help' => 'Test and display version.',
 				'parser' => $subcommandParser
-			))
-			->addSubcommand('folder', array(
-				'help' => __d('cake_console', 'Convert folder recursivly (Tools.Convert folder [options] [path])'),
+			])
+			->addSubcommand('folder', [
+				'help' => 'Convert folder recursivly (Tools.Convert folder [options] [path])',
 				'parser' => $subcommandParser
-			));
+			]);
 	}
 
 }

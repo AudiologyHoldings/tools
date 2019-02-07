@@ -5,7 +5,7 @@
  * Redistributions of files must retain the above copyright notice.
  *
  * @copyright Copyright (c) 2008, Andy Dawson
- * @license http://www.opensource.org/licenses/mit-license.php The MIT License
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 App::uses('AppHelper', 'View/Helper');
 
@@ -23,7 +23,7 @@ class TreeHelper extends AppHelper {
 	 *
 	 * @var array
 	 */
-	protected $_defaults = array(
+	protected $_defaultConfig = [
 		'model' => null,
 		'alias' => 'name',
 		'type' => 'ul',
@@ -34,7 +34,7 @@ class TreeHelper extends AppHelper {
 		'callback' => false,
 		'autoPath' => false,
 		'hideUnrelated' => false,
-		'treePath' => array(),
+		'treePath' => [],
 		'left' => 'lft',
 		'right' => 'rght',
 		'depth' => 0,
@@ -45,42 +45,42 @@ class TreeHelper extends AppHelper {
 		'splitCount' => null,
 		'totalNodes' => null,
 		'fullSettings' => false,
-	);
+	];
 
 	/**
-	 * Settings property
+	 * Config settings property
 	 *
 	 * @var array
 	 */
-	protected $_settings = array();
+	protected $_config = [];
 
 	/**
 	 * TypeAttributes property
 	 *
 	 * @var array
 	 */
-	protected $_typeAttributes = array();
+	protected $_typeAttributes = [];
 
 	/**
 	 * TypeAttributesNext property
 	 *
 	 * @var array
 	 */
-	protected $_typeAttributesNext = array();
+	protected $_typeAttributesNext = [];
 
 	/**
 	 * ItemAttributes property
 	 *
 	 * @var array
 	 */
-	protected $_itemAttributes = array();
+	protected $_itemAttributes = [];
 
 	/**
 	 * Helpers variable
 	 *
 	 * @var array
 	 */
-	public $helpers = array('Html');
+	public $helpers = ['Html'];
 
 	/**
 	 * Tree generation method.
@@ -115,20 +115,20 @@ class TreeHelper extends AppHelper {
 	 *		and optionally set the splitDepth to get parallel lists
 	 *
 	 * @param array $data data to loop on
-	 * @param array $settings
+	 * @param array $config
 	 * @return string html representation of the passed data
 	 * @throws CakeException
 	 */
-	public function generate($data, $settings = array()) {
+	public function generate(array $data, array $config = []) {
 		if (!$data) {
 			return '';
 		}
 
-		$this->_settings = array_merge($this->_defaults, (array)$settings);
-		if ($this->_settings['autoPath'] && !isset($this->_settings['autoPath'][2])) {
-			$this->_settings['autoPath'][2] = 'active';
+		$this->_config = $config + $this->_defaultConfig;
+		if ($this->_config['autoPath'] && !isset($this->_config['autoPath'][2])) {
+			$this->_config['autoPath'][2] = 'active';
 		}
-		extract($this->_settings);
+		extract($this->_config);
 		if ($indent === null && Configure::read('debug')) {
 			$indent = true;
 		}
@@ -144,10 +144,10 @@ class TreeHelper extends AppHelper {
 				}
 			}
 		}
-		$this->_settings['model'] = $model;
+		$this->_config['model'] = $model;
 
-		$this->_itemAttributes = $this->_typeAttributes = $this->_typeAttributesNext = array();
-		$stack = array();
+		$this->_itemAttributes = $this->_typeAttributes = $this->_typeAttributesNext = [];
+		$stack = [];
 		if ($depth == 0) {
 			if ($class) {
 				$this->addTypeAttribute('class', $class, null, 'previous');
@@ -158,7 +158,7 @@ class TreeHelper extends AppHelper {
 		}
 		$return = '';
 		$addType = true;
-		$this->_settings['totalNodes'] = count($data);
+		$this->_config['totalNodes'] = count($data);
 		$keys = array_keys($data);
 
 		if ($hideUnrelated === true || is_numeric($hideUnrelated)) {
@@ -239,7 +239,7 @@ class TreeHelper extends AppHelper {
 
 			$depth = $depth ? $depth : count($stack);
 
-			$elementData = array(
+			$elementData = [
 				'data' => $result,
 				'depth' => $depth,
 				'hasChildren' => $hasChildren,
@@ -250,21 +250,21 @@ class TreeHelper extends AppHelper {
 				'hasVisibleChildren' => $hasVisibleChildren,
 				'activePathElement' => $activePathElement,
 				'isSibling' => ($depth == 0 && !$activePathElement) ? true : false,
-			);
+			];
 			if ($elementData['isSibling'] && $hideUnrelated) {
-				$result['children'] = array();
+				$result['children'] = [];
 			}
 
-			$this->_settings = array_merge($this->_settings, $elementData);
-			if ($this->_settings['fullSettings']) {
-				$elementData = $this->_settings;
+			$this->_config = $elementData + $this->_config;
+			if ($this->_config['fullSettings']) {
+				$elementData = $this->_config;
 			}
 
 			/* Main Content */
 			if ($element) {
 				$content = $this->_View->element($element, $elementData);
 			} elseif ($callback) {
-				list($content) = array_map($callback, array($elementData));
+				list($content) = array_map($callback, [$elementData]);
 			} else {
 				$content = $row[$alias];
 			}
@@ -282,7 +282,7 @@ class TreeHelper extends AppHelper {
 					$return .= "\r\n" . $whiteSpace;
 				}
 				if ($type) {
-					$typeAttributes = $this->_attributes($type, array('data' => $elementData));
+					$typeAttributes = $this->_attributes($type, ['data' => $elementData]);
 					$return .= '<' . $type . $typeAttributes . '>';
 				}
 			}
@@ -298,9 +298,9 @@ class TreeHelper extends AppHelper {
 			$addType = false;
 			if ($hasVisibleChildren) {
 				if ($numberOfDirectChildren) {
-					$settings['depth'] = $depth + 1;
+					$config['depth'] = $depth + 1;
 					$return .= $this->_suffix();
-					$return .= $this->generate($result['children'], $settings);
+					$return .= $this->generate($result['children'], $config);
 					if ($itemType) {
 						if ($indent) {
 							$return .= $whiteSpace . "\t";
@@ -396,7 +396,7 @@ class TreeHelper extends AppHelper {
 	 */
 	public function addTypeAttribute($id = '', $key = '', $value = null, $previousOrNext = 'next') {
 		$var = '_typeAttributes';
-		$firstChild = isset($this->_settings['firstChild']) ? $this->_settings['firstChild'] : true;
+		$firstChild = isset($this->_config['firstChild']) ? $this->_config['firstChild'] : true;
 		if ($previousOrNext === 'next' && $firstChild) {
 			$var = '_typeAttributesNext';
 		}
@@ -430,7 +430,7 @@ class TreeHelper extends AppHelper {
 			$_splitCount = 0;
 			$_splitCounter = 0;
 		}
-		extract($this->_settings);
+		extract($this->_config);
 		if ($splitDepth || $splitCount) {
 			if (!$splitDepth) {
 				$_splitCount = $totalNodes / $splitCount;
@@ -452,7 +452,7 @@ class TreeHelper extends AppHelper {
 			if (!$splitDepth || $depth == $splitDepth) {
 				$_splitCounter++;
 				if ($type && ($_splitCounter % $_splitCount) === 0 && !$lastChild) {
-					unset ($this->_settings['callback']);
+					unset($this->_config['callback']);
 					return '</' . $type . '><' . $type . '>';
 				}
 			}
@@ -464,26 +464,26 @@ class TreeHelper extends AppHelper {
 	 *
 	 * Logic to apply styles to tags.
 	 *
-	 * @param mixed $rType
+	 * @param string $rType
 	 * @param array $elementData
 	 * @return void
 	 */
-	protected function _attributes($rType, $elementData = array(), $clear = true) {
-		extract($this->_settings);
-		if ($rType == $type) {
+	protected function _attributes($rType, array $elementData = [], $clear = true) {
+		extract($this->_config);
+		if ($rType === $type) {
 			$attributes = $this->_typeAttributes;
 			if ($clear) {
 				$this->_typeAttributes = $this->_typeAttributesNext;
-				$this->_typeAttributesNext = array();
+				$this->_typeAttributesNext = [];
 			}
 		} else {
 			$attributes = $this->_itemAttributes;
-			$this->_itemAttributes = array();
+			$this->_itemAttributes = [];
 			if ($clear) {
-				$this->_itemAttributes = array();
+				$this->_itemAttributes = [];
 			}
 		}
-		if ($rType == $itemType && $elementData['activePathElement']) {
+		if ($rType === $itemType && $elementData['activePathElement']) {
 			if ($elementData['activePathElement'] === true) {
 				$attributes['class'][] = $autoPath[2];
 			} else {
@@ -515,14 +515,14 @@ class TreeHelper extends AppHelper {
 	 * Mark unrelated records as hidden using `'hide' => 1`.
 	 * In the callback or element you can then return early in this case.
 	 *
-	 * @param array $tree
-	 * @param array $treePath
+	 * @param array $tree Tree
+	 * @param array $path Tree path
 	 * @param int $level
 	 * @return void
 	 * @throws CakeException
 	 */
-	protected function _markUnrelatedAsHidden(&$tree, $path, $level = 0) {
-		extract($this->_settings);
+	protected function _markUnrelatedAsHidden(&$tree, array $path, $level = 0) {
+		extract($this->_config);
 		$siblingIsActive = false;
 		foreach ($tree as $key => &$subTree) {
 			if (!isset($subTree['children'])) {

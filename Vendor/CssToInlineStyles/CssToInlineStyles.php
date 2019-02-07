@@ -8,6 +8,8 @@
  * @version		1.2.1
  * @copyright	Copyright (c), Tijs Verkoyen. All rights reserved.
  * @license		BSD License
+ *
+ * @deprecated Use composer and Emogrifier instead.
  */
 class CssToInlineStyles
 {
@@ -102,7 +104,7 @@ class CssToInlineStyles
         $selector = (string) $selector;
 
         // the CSS selector
-        $cssSelector = array(
+        $cssSelector = [
             // E F, Matches any F element that is a descendant of an E element
             '/(\w)\s+([\w\*])/',
             // E > F, Matches any F element that is a child of an element E
@@ -123,10 +125,10 @@ class CssToInlineStyles
             '/(\w+)+\#([\w\-_]+)/',
             // #myid, Matches any element with id-attribute equal to "myid"
             '/\#([\w\-_]+)/'
-        );
+        ];
 
         // the xPath-equivalent
-        $xPathQuery = array(
+        $xPathQuery = [
             // E F, Matches any F element that is a descendant of an E element
             '\1//\2',
             // E > F, Matches any F element that is a child of an element E
@@ -147,7 +149,7 @@ class CssToInlineStyles
             '\1[ @id = "\2" ]',
             // #myid, Matches any element with id-attribute equal to "myid"
             '*[ @id = "\1" ]'
-        );
+        ];
 
         // return
         $xPath = (string) '//' . preg_replace($cssSelector, $xPathQuery, $selector);
@@ -225,7 +227,7 @@ class CssToInlineStyles
         // should we use inline style-block
         if ($this->useInlineStylesBlock) {
             // init var
-            $matches = array();
+            $matches = [];
 
             // match the style blocks
             preg_match_all('|<style(.*)>(.*)</style>|isU', $this->html, $matches);
@@ -247,7 +249,7 @@ class CssToInlineStyles
         libxml_use_internal_errors(true);
 
 				//Check if html has ISO encoding and convert to UTF-8
-				$encoding = mb_detect_encoding($this->html, array('UTF-8', 'ISO-8859-1'));
+				$encoding = mb_detect_encoding($this->html, ['UTF-8', 'ISO-8859-1']);
 				if ($encoding === 'ISO-8859-1') {
 					$this->html = utf8_encode($this->html);
 				}
@@ -297,7 +299,7 @@ class CssToInlineStyles
                     }
 
                     // init var
-                    $properties = array();
+                    $properties = [];
 
                     // get current styles
                     $stylesAttribute = $element->attributes->getNamedItem('style');
@@ -332,7 +334,7 @@ class CssToInlineStyles
                     }
 
                     // build string
-                    $propertyChunks = array();
+                    $propertyChunks = [];
 
                     // build chunks
                     foreach ($properties as $key => $values) {
@@ -370,7 +372,7 @@ class CssToInlineStyles
                 )->value;
 
                 if ($originalStyle != '') {
-                    $originalProperties = array();
+                    $originalProperties = [];
                     $originalStyles = (array) explode(';', $originalStyle);
 
                     foreach ($originalStyles as $property) {
@@ -389,7 +391,7 @@ class CssToInlineStyles
 
                     // get current styles
                     $stylesAttribute = $element->attributes->getNamedItem('style');
-                    $properties = array();
+                    $properties = [];
 
                     // any styles defined before?
                     if ($stylesAttribute !== null) {
@@ -421,7 +423,7 @@ class CssToInlineStyles
                     }
 
                     // build string
-                    $propertyChunks = array();
+                    $propertyChunks = [];
 
                     // build chunks
                     foreach ($properties as $key => $values) {
@@ -475,10 +477,10 @@ class CssToInlineStyles
 
         if ($this->correctUtf8) {
             // Only for >PHP5.4
-            $chars = array(
+            $chars = [
 							'&nbsp;', '&laquo;', '&raquo;', '&lt;', '&gt;',
 							'&copy;', '&reg;', '&trade;', '&apos;', '&amp;', '&quot;',
-						);
+						];
 						// Make sure chars dont annihilate the result
             foreach ($chars as $char) {
             	$html = str_replace($char, '[[' . substr($char, 1, -1) . ']]', $html);
@@ -524,7 +526,7 @@ class CssToInlineStyles
         $css = (string) $this->css;
 
         // remove newlines
-        $css = str_replace(array("\r", "\n"), '', $css);
+        $css = str_replace(["\r", "\n"], '', $css);
 
         // replace double quotes by single quotes
         $css = str_replace('"', '\'', $css);
@@ -568,7 +570,7 @@ class CssToInlineStyles
                 $selector = trim($selector);
 
                 // build an array for each selector
-                $ruleSet = array();
+                $ruleSet = [];
 
                 // store selector
                 $ruleSet['selector'] = $selector;
@@ -593,7 +595,7 @@ class CssToInlineStyles
 
         // sort based on specifity
         if (!empty($this->cssRules)) {
-            usort($this->cssRules, array(__CLASS__, 'sortOnSpecifity'));
+            usort($this->cssRules, [__CLASS__, 'sortOnSpecifity']);
         }
     }
 
@@ -609,7 +611,7 @@ class CssToInlineStyles
         $properties = (array) explode(';', $propertyString);
 
         // init var
-        $pairs = array();
+        $pairs = [];
 
         // loop properties
         foreach ($properties as $property) {

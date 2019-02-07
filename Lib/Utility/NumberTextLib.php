@@ -1,7 +1,7 @@
 <?php
 App::import('Vendor', 'Tools.Soros/Soros');
 if (!class_exists('Soros')) {
-	throw new CakeException(__d('dev', 'Vendor class Soros cannot be found'));
+	throw new CakeException('Vendor class Soros cannot be found');
 }
 
 /**
@@ -29,11 +29,11 @@ class NumberTextLib {
 		if (!$lang) {
 			$lang = 'en_US';
 		}
-		if (!self::$_dir) {
-			self::$_dir = CakePlugin::path('Tools') . 'Vendor' . DS . 'Soros' . DS;
+		if (!static::$_dir) {
+			static::$_dir = CakePlugin::path('Tools') . 'Vendor' . DS . 'Soros' . DS;
 		}
-		if (!file_exists(self::$_dir . "$lang.sor")) {
-			throw new CakeException(__d('dev', 'Language file %s.sor not found', $lang));
+		if (!file_exists(static::$_dir . "$lang.sor")) {
+			throw new CakeException(sprintf('Language file %s.sor not found', $lang));
 		}
 		return $lang;
 	}
@@ -47,9 +47,9 @@ class NumberTextLib {
 	 * @return string
 	 */
 	public static function numberText($input = '', $lang = '') {
-		$s = self::getLangModule($lang);
+		$s = static::getLangModule($lang);
 		if ($s === null) {
-			$s = self::load($lang);
+			$s = static::load($lang);
 		}
 		if ($s === null) {
 			return null;
@@ -67,26 +67,26 @@ class NumberTextLib {
 	 * @return string
 	 */
 	public static function moneyText($input = '', $money = '', $lang = '') {
-		return self::numbertext($money . " " . $input, $lang);
+		return static::numbertext($money . " " . $input, $lang);
 	}
 
 	protected static function load($lang) {
-		$lang = self::setLang($lang);
+		$lang = static::setLang($lang);
 
-		$url = self::$_dir . "$lang.sor";
-		$st = file_get_contents($url);
+		$file = static::$_dir . "$lang.sor";
+		$st = file_get_contents($file);
 		if ($st === false) {
 			return null;
 		}
 		$s = new Soros($st);
 		if ($lang != null) {
-			self::addModule(array($lang, $s));
+			static::addModule([$lang, $s]);
 		}
 		return $s;
 	}
 
 	protected static function getModules($m = null) {
-		static $modules = array();
+		static $modules = [];
 		if (is_array($m)) {
 			$modules[] = $m;
 		}
@@ -94,7 +94,7 @@ class NumberTextLib {
 	}
 
 	protected static function getLangModule($lang) {
-		$modules = self::getModules();
+		$modules = static::getModules();
 		if (isset($modules[$lang])) {
 			return $modules[$lang];
 		}
@@ -102,7 +102,7 @@ class NumberTextLib {
 	}
 
 	protected static function addModule($m) {
-		self::getModules($m);
+		static::getModules($m);
 	}
 
 }

@@ -5,9 +5,8 @@ App::uses('AppShell', 'Console/Command');
 /**
  * Detect encoding or find invalid files (starting with BOM)
  *
- * @cakephp 2.x
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class EncodingShell extends AppShell {
 
@@ -16,7 +15,7 @@ class EncodingShell extends AppShell {
 	 *
 	 * @var array
 	 */
-	protected $_found = array();
+	protected $_found = [];
 
 	/**
 	 * ConvertShell::folder()
@@ -50,7 +49,7 @@ class EncodingShell extends AppShell {
 
 		$in = '';
 		if ($this->_found) {
-			$in = $this->in('Correct those files?', array('y', 'n'), 'n');
+			$in = $this->in('Correct those files?', ['y', 'n'], 'n');
 		}
 		if ($in === 'y') {
 			if (empty($this->params['dry-run'])) {
@@ -74,7 +73,7 @@ class EncodingShell extends AppShell {
 	 * @param array $excludes
 	 * @return void
 	 */
-	protected function _detect($path, $extensions, $excludes = array()) {
+	protected function _detect($path, $extensions, $excludes = []) {
 		$Iterator = new RegexIterator(
 			new RecursiveIteratorIterator(new RecursiveDirectoryIterator($path)),
 			'/^.+\.(' . $extensions . ')$/i',
@@ -117,33 +116,33 @@ class EncodingShell extends AppShell {
 	 * @return ConsoleOptionParser
 	 */
 	public function getOptionParser() {
-		$subcommandParser = array(
-			'options' => array(
-				'ext' => array(
+		$subcommandParser = [
+			'options' => [
+				'ext' => [
 					'short' => 'e',
-					'help' => __d('cake_console', 'Specify extensions [php|txt|...] - defaults to [php].'),
+					'help' => 'Specify extensions [php|txt|...] - defaults to [php].',
 					'default' => '',
-				),
-				'dry-run' => array(
+				],
+				'dry-run' => [
 					'short' => 'd',
-					'help' => __d('cake_console', 'Dry run the command, no files will actually be modified. Should be combined with verbose.'),
+					'help' => 'Dry run the command, no files will actually be modified. Should be combined with verbose.',
 					'boolean' => true
-				),
-				'exclude' => array(
+				],
+				'exclude' => [
 					'short' => 'x',
-					'help' => __d('cake_console', 'exclude the following files'),
+					'help' => 'Exclude the following files',
 					'boolean' => true,
 					'default' => ''
-				)
-			)
-		);
+				]
+			]
+		];
 
 		return parent::getOptionParser()
-			->description(__d('cake_console', 'The %sShell finds BOM files and can correct them.', $this->name))
-			->addSubcommand('folder', array(
-				'help' => __d('cake_console', 'Search and correct folder recursivly.'),
+			->description(sprintf('The %sShell finds BOM files and can correct them.', $this->name))
+			->addSubcommand('folder', [
+				'help' => 'Search and correct folder recursivly.',
 				'parser' => $subcommandParser
-			));
+			]);
 	}
 
 }

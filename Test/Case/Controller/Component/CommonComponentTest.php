@@ -5,12 +5,13 @@ App::uses('Component', 'Controller');
 App::uses('CakeSession', 'Model/Datasource');
 App::uses('Controller', 'Controller');
 App::uses('AppModel', 'Model');
+App::uses('Object', 'Core');
 
 /**
  */
 class CommonComponentTest extends CakeTestCase {
 
-	public $fixtures = array('core.cake_session', 'plugin.tools.tools_user', 'plugin.tools.role');
+	public $fixtures = ['core.cake_session', 'plugin.tools.tools_user', 'plugin.tools.role'];
 
 	public function setUp() {
 		parent::setUp();
@@ -19,7 +20,7 @@ class CommonComponentTest extends CakeTestCase {
 		CakeSession::write('Auth', '');
 		CakeSession::delete('Auth');
 
-		$this->Controller = new CommonComponentTestController(new CakeRequest, new CakeResponse);
+		$this->Controller = new CommonComponentTestController(new CakeRequest(), new CakeResponse());
 		$this->Controller->constructClasses();
 		$this->Controller->startupProcess();
 	}
@@ -55,13 +56,13 @@ class CommonComponentTest extends CakeTestCase {
 		// with plugin
 		$this->Controller->Calendar = null;
 		$this->assertTrue(!isset($this->Controller->Calendar));
-		$this->Controller->Common->loadComponent('Tools.Calendar');
-		$this->assertTrue(isset($this->Controller->Calendar));
+		$this->Controller->Common->loadComponent('Tools.Mobile');
+		$this->assertTrue(isset($this->Controller->Mobile));
 
 		// with options
 		$this->Controller->Test = null;
 		$this->assertTrue(!isset($this->Controller->Test));
-		$this->Controller->Common->loadComponent(array('RequestHandler', 'Test' => array('x' => 'y')));
+		$this->Controller->Common->loadComponent(['RequestHandler', 'Test' => ['x' => 'y']]);
 		$this->assertTrue(isset($this->Controller->Test));
 		$this->assertTrue($this->Controller->Test->isInit);
 		$this->assertTrue($this->Controller->Test->isStartup);
@@ -82,7 +83,7 @@ class CommonComponentTest extends CakeTestCase {
 
 		// with options
 		$this->assertTrue(!isset($this->Controller->TestLib));
-		$this->Controller->Common->loadLib(array('Tools.RandomLib', 'TestLib' => array('x' => 'y')));
+		$this->Controller->Common->loadLib(['Tools.RandomLib', 'TestLib' => ['x' => 'y']]);
 		$this->assertTrue(isset($this->Controller->TestLib));
 		$this->assertTrue($this->Controller->TestLib->hasOptions);
 	}
@@ -143,45 +144,16 @@ class CommonComponentTest extends CakeTestCase {
 	}
 
 	/**
-	 * CommonComponentTest::testTransientFlashMessage()
-	 *
-	 * @return void
-	 */
-	public function testTransientFlashMessage() {
-		$is = $this->Controller->Common->transientFlashMessage('xyz', 'success');
-		//$this->assertTrue($is);
-
-		$res = Configure::read('messages');
-		//debug($res);
-		$this->assertTrue(!empty($res));
-		$this->assertTrue(isset($res['success'][0]) && $res['success'][0] === 'xyz');
-	}
-
-	/**
-	 * CommonComponentTest::testFlashMessage()
-	 *
-	 * @return void
-	 */
-	public function testFlashMessage() {
-		$this->Controller->Session->delete('messages');
-		$is = $this->Controller->Common->flashMessage('efg');
-
-		$res = $this->Controller->Session->read('messages');
-		$this->assertTrue(!empty($res));
-		$this->assertTrue(isset($res['info'][0]) && $res['info'][0] === 'efg');
-	}
-
-	/**
 	 * CommonComponentTest::testManualLogin()
 	 *
 	 * @return void
 	 */
 	public function testManualLogin() {
-		$user = array(
+		$user = [
 			'name' => 'foo',
 			'password' => 123,
 			'role_id' => 1,
-		);
+		];
 		$User = ClassRegistry::init('MyToolsUser');
 		$User->create();
 		$res = $User->save($user);
@@ -196,7 +168,7 @@ class CommonComponentTest extends CakeTestCase {
 		$this->assertTrue($is);
 
 		$res = CakeSession::read('Auth');
-		$this->assertSame($User->id, $res['User']['id']);
+		$this->assertEquals($User->id, $res['User']['id']);
 		$this->assertTrue(!empty($res['User']['Role']));
 	}
 
@@ -206,11 +178,11 @@ class CommonComponentTest extends CakeTestCase {
 	 * @return void
 	 */
 	public function testForceLogin() {
-		$user = array(
+		$user = [
 			'name' => 'foo',
 			'password' => 123,
 			'role_id' => 1,
-		);
+		];
 		$User = ClassRegistry::init('MyToolsUser');
 		$User->create();
 		$res = $User->save($user);
@@ -224,22 +196,22 @@ class CommonComponentTest extends CakeTestCase {
 		$this->assertTrue($is);
 
 		$res = CakeSession::read('Auth');
-		$this->assertSame($User->id, $res['User']['id']);
+		$this->assertEquals($User->id, $res['User']['id']);
 		$this->assertTrue(!empty($res['User']['Role']));
 	}
 
 	public function testGetGroup() {
-		$list = array(
-			'Models' => array(
+		$list = [
+			'Models' => [
 				'1' => 'Foo',
 				'2' => 'Bar'
-			),
-			'Mitarbeiter' => array(
+			],
+			'Mitarbeiter' => [
 				'3' => 'Some',
 				'4' => 'Thing'
-			),
-		);
-		$matching = array('Models' => 'Model', 'Mitarbeiter' => 'Contributor');
+			],
+		];
+		$matching = ['Models' => 'Model', 'Mitarbeiter' => 'Contributor'];
 
 		$res = CommonComponent::getGroup($list, 111);
 		$this->assertEquals('', $res);
@@ -260,22 +232,22 @@ class CommonComponentTest extends CakeTestCase {
 	 * @return void
 	 */
 	public function testDataTrim() {
-		$array = array('Some' => array('Deep' => array('array' => '  bla  ')));
+		$array = ['Some' => ['Deep' => ['array' => '  bla  ']]];
 
-		$this->Controller = new CommonComponentTestController(new CakeRequest, new CakeResponse);
+		$this->Controller = new CommonComponentTestController(new CakeRequest(), new CakeResponse());
 		$this->Controller->request->data = $array;
 		$this->Controller->request->query = $array;
 		$this->Controller->constructClasses();
 		$this->Controller->startupProcess();
 
-		$expected = array('Some' => array('Deep' => array('array' => 'bla')));
+		$expected = ['Some' => ['Deep' => ['array' => 'bla']]];
 		$this->assertSame($expected, $this->Controller->request->data);
 		$this->assertSame($expected, $this->Controller->request->query);
 
 		// Overwrite
 		Configure::write('DataPreparation.notrim', true);
 
-		$this->Controller = new CommonComponentTestController(new CakeRequest, new CakeResponse);
+		$this->Controller = new CommonComponentTestController(new CakeRequest(), new CakeResponse());
 		$this->Controller->request->data = $array;
 		$this->Controller->request->query = $array;
 		$this->Controller->constructClasses();
@@ -283,6 +255,61 @@ class CommonComponentTest extends CakeTestCase {
 
 		$this->assertSame($array, $this->Controller->request->data);
 		$this->assertSame($array, $this->Controller->request->query);
+	}
+
+	/**
+	 * CommonComponentTest::testExtractEmailInfo()
+	 *
+	 */
+	public function testExtractEmailInfoWithValidEmail() {
+		$email = 'xyz@e.abc.de';
+		$result = $this->Controller->Common->extractEmailInfo($email, 'username');
+		$expected = 'xyz';
+		$this->assertEquals($expected, $result);
+
+		$result = $this->Controller->Common->extractEmailInfo($email, 'hostname');
+		$expected = 'e.abc.de';
+		$this->assertEquals($expected, $result);
+
+		$result = $this->Controller->Common->extractEmailInfo($email, 'tld');
+		$expected = 'de';
+		$this->assertEquals($expected, $result);
+
+		$result = $this->Controller->Common->extractEmailInfo($email, 'domain');
+		$expected = 'abc';
+		$this->assertEquals($expected, $result);
+
+		$result = $this->Controller->Common->extractEmailInfo($email, 'subdomain');
+		$expected = 'e';
+		$this->assertEquals($expected, $result);
+	}
+
+	/**
+	 * CommonComponentTest::testExtractEmailInfo()
+	 *
+	 */
+	public function testExtractEmailInfoWithInvalidEmail() {
+		$email = 'abc.de';
+		$result = $this->Controller->Common->extractEmailInfo($email, 'username');
+		$this->assertFalse($result);
+
+		$email = 'xyz@';
+		$result = $this->Controller->Common->extractEmailInfo($email, 'username');
+		$this->assertFalse($result);
+	}
+
+	/**
+	 * CommonComponentTest::testContainsAtSign()
+	 *
+	 */
+	public function testContainsAtSign() {
+		$email = 'xyz@e.abc.de';
+		$result = $this->Controller->Common->containsAtSign($email);
+		$this->assertTrue($result);
+
+		$email = 'e.abc.de';
+		$result = $this->Controller->Common->containsAtSign($email);
+		$this->assertFalse($result);
 	}
 
 }
@@ -297,20 +324,20 @@ class MyToolsUser extends AppModel {
 
 	public $alias = 'User';
 
-	public $belongsTo = array(
+	public $belongsTo = [
 		'Role',
-	);
+	];
 
 }
 
 // Use Controller instead of AppController to avoid conflicts
 class CommonComponentTestController extends Controller {
 
-	public $components = array('Session', 'Tools.Common', 'Auth');
+	public $components = ['Session', 'Tools.Common', 'Auth'];
 
 	public $failed = false;
 
-	public $testHeaders = array();
+	public $testHeaders = [];
 
 	public function fail() {
 		$this->failed = true;
@@ -323,6 +350,7 @@ class CommonComponentTestController extends Controller {
 	public function header($status) {
 		$this->testHeaders[] = $status;
 	}
+
 }
 
 class TestComponent extends Component {
@@ -346,15 +374,17 @@ class TestComponent extends Component {
 }
 
 class TestHelper extends Object {
+
 }
 
 class TestLib {
 
 	public $hasOptions = false;
 
-	public function __construct($options = array()) {
+	public function __construct($options = []) {
 		if (!empty($options)) {
 			$this->hasOptions = true;
 		}
 	}
+
 }

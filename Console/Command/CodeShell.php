@@ -11,7 +11,7 @@ if (!defined('LF')) {
  * - Fix missing App::uses() statements
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class CodeShell extends AppShell {
 
@@ -26,33 +26,36 @@ class CodeShell extends AppShell {
 	 */
 	public function dependencies() {
 		if ($customPath = $this->params['custom']) {
-			$this->_paths = array($customPath);
+			$this->_paths = [$customPath];
 		} elseif (!empty($this->params['plugin'])) {
-			$this->_paths = array(App::pluginPath($this->params['plugin']));
+			$this->_paths = [CakePlugin::path($this->params['plugin'])];
 		} else {
-			$this->_paths = array(APP);
+			$this->_paths = [APP];
 		}
 
 		$this->_findFiles('php');
 		foreach ($this->_files as $file) {
-			$this->out(__d('cake_console', 'Updating %s...', $file), 1, Shell::VERBOSE);
+			$this->out(sprintf('Updating %s...', $file), 1, Shell::VERBOSE);
 
 			$this->_correctFile($file);
 
-			$this->out(__d('cake_console', 'Done updating %s', $file), 1, Shell::VERBOSE);
+			$this->out(sprintf('Done updating %s', $file), 1, Shell::VERBOSE);
 		}
 	}
 
+	/**
+	 * @return void
+	 */
 	protected function _correctFile($file) {
 		$fileContent = $content = file_get_contents($file);
 
 		preg_match_all('/class \w+ extends (.+)\s*{/', $fileContent, $matches);
 		if (empty($matches)) {
-			continue;
+			return;
 		}
 
-		$excludes = array('Fixture', 'Exception', 'TestSuite', 'CakeTestModel');
-		$missingClasses = array();
+		$excludes = ['Fixture', 'Exception', 'TestSuite', 'CakeTestModel'];
+		$missingClasses = [];
 
 		foreach ($matches[1] as $match) {
 			$match = trim($match);
@@ -88,7 +91,7 @@ class CodeShell extends AppShell {
 		}
 
 		$fileContent = explode(LF, $fileContent);
-		$inserted = array();
+		$inserted = [];
 		$pos = 1;
 
 		if (!empty($fileContent[1]) && $fileContent[1] === '/**') {
@@ -113,7 +116,7 @@ class CodeShell extends AppShell {
 		}
 
 		foreach ($missingClasses as $missingClass) {
-			$classes = array(
+			$classes = [
 				'Controller' => 'Controller',
 				'Component' => 'Controller/Component',
 				'Shell' => 'Console/Command',
@@ -123,7 +126,7 @@ class CodeShell extends AppShell {
 				'Task' => 'Console/Command/Task',
 				'View' => 'View',
 				'Helper' => 'View/Helper',
-			);
+			];
 			$type = null;
 			foreach ($classes as $class => $namespace) {
 				if (($t = strposReverse($missingClass, $class)) === 0) {
@@ -168,7 +171,7 @@ class CodeShell extends AppShell {
 
 		if (empty($this->params['dry-run'])) {
 			file_put_contents($file, $fileContent);
-			$this->out(__d('cake_console', 'Correcting %s', $file), 1, Shell::VERBOSE);
+			$this->out(sprintf('Correcting %s', $file), 1, Shell::VERBOSE);
 		}
 	}
 
@@ -179,19 +182,19 @@ class CodeShell extends AppShell {
 	 * @return void
 	 */
 	public function utf8() {
-		$this->_paths = array(APP . 'View' . DS);
+		$this->_paths = [APP . 'View' . DS];
 		$this->params['ext'] = 'php|ctp';
 		//$this->out('found: '.count($this->_files));
 
-		$patterns = array(
-		);
-		$umlauts = array('ä', 'ö', 'ü', 'Ä', 'Ö', 'Ü', 'ß');
+		$patterns = [
+		];
+		$umlauts = ['ä', 'ö', 'ü', 'Ä', 'Ö', 'Ü', 'ß'];
 		foreach ($umlauts as $umlaut) {
-			$patterns[] = array(
+			$patterns[] = [
 				ent($umlaut) . ' => ' . $umlaut,
 				'/' . ent($umlaut) . '/',
 				$umlaut,
-			);
+			];
 		}
 
 		$this->_filesRegexpUpdate($patterns);
@@ -206,7 +209,7 @@ class CodeShell extends AppShell {
 	protected function _filesRegexpUpdate($patterns) {
 		$this->_findFiles($this->params['ext']);
 		foreach ($this->_files as $file) {
-			$this->out(__d('cake_console', 'Updating %s...', $file), 1, Shell::VERBOSE);
+			$this->out(sprintf('Updating %s...', $file), 1, Shell::VERBOSE);
 			$this->_utf8File($file, $patterns);
 		}
 	}
@@ -218,7 +221,7 @@ class CodeShell extends AppShell {
 	 * @return void
 	 */
 	protected function _findFiles($extensions = '') {
-		$this->_files = array();
+		$this->_files = [];
 		foreach ($this->_paths as $path) {
 			if (!is_dir($path)) {
 				continue;
@@ -229,13 +232,13 @@ class CodeShell extends AppShell {
 				RegexIterator::MATCH
 			);
 			foreach ($Iterator as $file) {
-				$excludes = array('Config');
+				$excludes = ['Config'];
 				//Iterator processes plugins even if not asked to
 				if (empty($this->params['plugin'])) {
-					$excludes = array_merge($excludes, array('Plugin', 'plugins'));
+					$excludes = array_merge($excludes, ['Plugin', 'plugins']);
 				}
 				if (empty($this->params['vendor'])) {
-					$excludes = array_merge($excludes, array('Vendor', 'vendors'));
+					$excludes = array_merge($excludes, ['Vendor', 'vendors']);
 				}
 				if (!empty($excludes)) {
 					$isIllegalPluginPath = false;
@@ -267,11 +270,11 @@ class CodeShell extends AppShell {
 		$contents = $fileContent = file_get_contents($file);
 
 		foreach ($patterns as $pattern) {
-			$this->out(__d('cake_console', ' * Updating %s', $pattern[0]), 1, Shell::VERBOSE);
+			$this->out(sprintf(' * Updating %s', $pattern[0]), 1, Shell::VERBOSE);
 			$contents = preg_replace($pattern[1], $pattern[2], $contents);
 		}
 
-		$this->out(__d('cake_console', 'Done updating %s', $file), 1, Shell::VERBOSE);
+		$this->out(sprintf('Done updating %s', $file), 1, Shell::VERBOSE);
 		if (!$this->params['dry-run'] && $contents !== $fileContent) {
 			if (file_exists($file)) {
 				unlink($file);
@@ -284,51 +287,51 @@ class CodeShell extends AppShell {
 	}
 
 	public function getOptionParser() {
-		$subcommandParser = array(
-			'options' => array(
-				'plugin' => array(
+		$subcommandParser = [
+			'options' => [
+				'plugin' => [
 					'short' => 'p',
-					'help' => __d('cake_console', 'The plugin to update. Only the specified plugin will be updated.'),
+					'help' => 'The plugin to update. Only the specified plugin will be updated.',
 					'default' => ''
-				),
-				'custom' => array(
+				],
+				'custom' => [
 					'short' => 'c',
-					'help' => __d('cake_console', 'Custom path to update recursivly.'),
+					'help' => 'Custom path to update recursivly.',
 					'default' => ''
-				),
-				'ext' => array(
+				],
+				'ext' => [
 					'short' => 'e',
-					'help' => __d('cake_console', 'The extension(s) to search. A pipe delimited list, or a preg_match compatible subpattern'),
+					'help' => 'The extension(s) to search. A pipe delimited list, or a preg_match compatible subpattern',
 					'default' => 'php|ctp|thtml|inc|tpl'
-				),
-				'vendor' => array(
+				],
+				'vendor' => [
 					'short' => 'e',
-					'help' => __d('cake_console', 'Include vendor files, as well'),
+					'help' => 'Include vendor files, as well',
 					'boolean' => true
-				),
-				'dry-run' => array(
+				],
+				'dry-run' => [
 					'short' => 'd',
-					'help' => __d('cake_console', 'Dry run the update, no files will actually be modified.'),
+					'help' => 'Dry run the update, no files will actually be modified.',
 					'boolean' => true
-				)
-			)
-		);
+				]
+			]
+		];
 
 		return parent::getOptionParser()
-			->description(__d('cake_console', "A shell to help automate code cleanup. \n" .
-				"Be sure to have a backup of your application before running these commands."))
-			->addSubcommand('group', array(
-				'help' => __d('cake_console', 'Run multiple commands.'),
+			->description("A shell to help automate code cleanup. \n" .
+				"Be sure to have a backup of your application before running these commands.")
+			->addSubcommand('group', [
+				'help' => 'Run multiple commands.',
 				'parser' => $subcommandParser
-			))
-			->addSubcommand('dependencies', array(
-				'help' => __d('cake_console', 'Correct dependencies'),
+			])
+			->addSubcommand('dependencies', [
+				'help' => 'Correct dependencies',
 				'parser' => $subcommandParser
-			))
-			->addSubcommand('utf8', array(
-				'help' => __d('cake_console', 'Make files utf8 compliant'),
+			])
+			->addSubcommand('utf8', [
+				'help' => 'Make files utf8 compliant',
 				'parser' => $subcommandParser
-			));
+			]);
 	}
 
 	/**
@@ -336,10 +339,10 @@ class CodeShell extends AppShell {
 	 *
 	 * @var array
 	 */
-	public $tasks = array(
+	public $tasks = [
 		'CodeConvention',
 		'CodeWhitespace'
-	);
+	];
 
 	/**
 	 * Main execution function

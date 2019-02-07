@@ -21,14 +21,14 @@ class FileLibTest extends CakeTestCase {
 
 		$handler2 = new FileLib(TMP . 'test.txt', true);
 
-		$is = $handler2->readCsv(1024, ',', '"');
-		$expected = array(array(
+		$is = $handler2->readCsv();
+		$expected = [[
 				'First',
 				'Last Name',
-				'Email'), array(
+				'Email'], [
 				'Example',
 				'Firsty',
-				'test@test.com'));
+				'test@test.com']];
 
 		$status = $this->assertEquals($expected, $is);
 		$this->_printArrays($status, $is, $expected, $pre);
@@ -49,20 +49,79 @@ class FileLibTest extends CakeTestCase {
 
 		$handler2 = new FileLib(TMP . 'test.txt', true);
 
-		$is = $handler2->readCsv(1024, ',', '\'');
-		$expected = array(array(
+		$is = $handler2->readCsv(['enclosure' => '\'']);
+		$expected = [[
 				'First',
 				'Last Name',
 				'Email'
-			), array(
+			], [
 				'Example Äs',
 				'Firsty üs',
 				'test@test.com sß'
-			)
-		);
+			]
+		];
 
 		$status = $this->assertEquals($expected, $is);
 		$this->_printArrays($status, $is, $expected, $pre);
+	}
+
+	/**
+	 * Tests that tmpfile() hack works. One should use readCsvFromString() instead, though.
+	 *
+	 * @return void
+	 */
+	public function testReadCsvFromTmpFile() {
+		$message = '"First"; "Last Name"; "Email"' . NL . '"Example Äs"; "Firsty üs"; "test@test.com sß"';
+
+		$handle = tmpfile();
+		$meta = stream_get_meta_data($handle);
+		$filename = $meta['uri'];
+
+		$this->assertTrue(file_exists($filename));
+
+		$File = new FileLib($filename);
+		$File->write($message);
+		// This seems to be necessary in this case - fclose($handle) doesn't do the trick
+		$File->handle = $handle;
+
+		$array = $File->readCsv(['delimiter' => ';']);
+		$File->close();
+
+		$this->assertFalse(file_exists($filename));
+
+		$this->assertTrue(count($array) === 2);
+		$this->assertEquals('Last Name', $array[0][1]);
+	}
+
+	/**
+	 * FileLibTest::testReadCsvFromString()
+	 *
+	 * @return void
+	 */
+	public function testReadCsvFromString() {
+		$csv = '\'First\', \'Last Name\', \'Email\'' . NL . '\'Example Äs\', \'Firsty üs\', \'test@test.com\'';
+		$array = FileLib::readCsvFromString($csv, ['enclosure' => '\'']);
+		$this->assertEquals('Last Name', $array[0][1]);
+
+		$csv = '\'First\', \'Last Name\', \'Email\'' . NL . '\'Example Äs\', \'Firsty üs\', \'test@test.com \\\' sß\'';
+		$array = FileLib::readCsvFromString($csv, ['enclosure' => '\'']);
+		$this->assertEquals('test@test.com \\\' sß', $array[1][2]);
+
+		$csv = '\'First\', \'Last Name\', \'Email\'' . NL . '\'Example Äs\', \'Firsty üs\', \'test@test.com \'\' sß\'';
+		$array = FileLib::readCsvFromString($csv, ['enclosure' => '\'']);
+		$this->assertEquals('test@test.com \' sß', $array[1][2]);
+	}
+
+	/**
+	 * FileLibTest::testReadCsvFromString()
+	 *
+	 * @expectedException InternalErrorException
+	 * @return void
+	 */
+	public function testReadCsvFromStringInvalidMultibyteDelimiter() {
+		$csv = 'äFirstä, äLast Nameä, äEmailä' . NL . 'äExample Äsä, äFirsty üsä, ätest@test.com ää sßä';
+		$array = FileLib::readCsvFromString($csv, ['enclosure' => 'ä', 'delimiter' => 'ä']);
+		$this->assertEquals('test@test.com ä sß', $array[1][2]);
 	}
 
 	/**
@@ -92,26 +151,26 @@ class FileLibTest extends CakeTestCase {
 	 */
 	public function testWriteCsv() {
 		$handler = new FileLib(TMP . 'test.csv', true);
-		$array = array(
-			array(
+		$array = [
+			[
 				'header1',
 				'header2',
-				'header3'),
-			array(
+				'header3'],
+			[
 				'v1a',
 				'v1b',
-				'v1c'),
-			array(
+				'v1c'],
+			[
 				'v2a',
 				'v2b',
-				'v2c'),
-			);
+				'v2c'],
+			];
 
 		$res = $handler->writeCsv($array);
 		$this->assertTrue($res);
 
 		$handler = new FileLib(TMP . 'test.csv', true);
-		$res = $handler->readCsv(1024);
+		$res = $handler->readCsv();
 		$this->assertEquals($array, $res);
 	}
 
@@ -133,13 +192,13 @@ class FileLibTest extends CakeTestCase {
 		$handler2 = new FileLib(TMP . 'test.txt', true);
 
 		$is = $handler2->readWithPattern('%s' . TB . '%s' . TB . '%s');
-		$expected = array(array(
+		$expected = [[
 				'First',
 				'LastName',
-				'Email'), array(
+				'Email'], [
 				'Example',
 				'Firsty',
-				'test@test.com'));
+				'test@test.com']];
 
 		$status = $this->assertEquals($expected, $is);
 		$this->_printArrays($status, $is, $expected, $pre);
@@ -157,13 +216,13 @@ class FileLibTest extends CakeTestCase {
 		$handler2 = new FileLib(TMP . 'test.txt', true);
 
 		$is = $handler2->readWithPattern('%d-%d-%d');
-		$expected = array(array(
+		$expected = [[
 				'2',
 				'33',
-				'44'), array(
+				'44'], [
 				'5',
 				'66',
-				'77'));
+				'77']];
 
 		$status = $this->assertEquals($expected, $is);
 		$this->_printArrays($status, $is, $expected, $pre);
@@ -178,17 +237,17 @@ class FileLibTest extends CakeTestCase {
 
 		$handler2 = new FileLib(TMP . 'test.txt', true);
 
-		$is = $handler2->readCsv(1024, ',', '"');
+		$is = $handler2->readCsv();
 
 		$is = $handler2->transfer($is);
 		//pr($is);
-		$expected = array(array(
+		$expected = [[
 				'first' => 'Example',
 				'last_name' => 'Firsty',
-				'email' => 'test@test.com'), array(
+				'email' => 'test@test.com'], [
 				'first' => 'Next',
 				'last_name' => 'Secondy',
-				'email' => 'again@test.com'));
+				'email' => 'again@test.com']];
 		$this->assertEquals($expected, $is);
 	}
 
@@ -201,20 +260,20 @@ class FileLibTest extends CakeTestCase {
 
 		$handler2 = new FileLib(TMP . 'test.txt', true);
 
-		$is = $handler2->readCsv(1024, ',', '"');
+		$is = $handler2->readCsv();
 		array_shift($is);
-		$is = $handler2->transfer($is, array('keys' => array(
+		$is = $handler2->transfer($is, ['keys' => [
 				'X',
 				'Y',
-				'Z'), 'preserve_keys' => true));
+				'Z'], 'preserve_keys' => true]);
 		//pr($is);
-		$expected = array(array(
+		$expected = [[
 				'X' => 'Example',
 				'Y' => 'Firsty',
-				'Z' => 'test@test.com'), array(
+				'Z' => 'test@test.com'], [
 				'X' => 'Next',
 				'Y' => 'Secondy',
-				'Z' => 'again@test.com'));
+				'Z' => 'again@test.com']];
 		$this->assertEquals($expected, $is);
 	}
 
@@ -227,17 +286,17 @@ class FileLibTest extends CakeTestCase {
 
 		$handler2 = new FileLib(TMP . 'test.txt', true);
 
-		$is = $handler2->readCsv(1024, ',', '"', 'rb', false, true);
+		$is = $handler2->readCsv(['removeEmpty' => true]);
 		array_shift($is);
-		$is = $handler2->transfer($is, array('keys' => array(
+		$is = $handler2->transfer($is, ['keys' => [
 				'X',
 				'Y',
-				'Z'), 'preserve_keys' => true));
+				'Z'], 'preserve_keys' => true]);
 		//pr($is);
-		$expected = array(array(
+		$expected = [[
 				'X' => 'Next',
 				'Y' => 'Secondy',
-				'Z' => 'again@test.com'));
+				'Z' => 'again@test.com']];
 		$this->assertEquals($expected, $is);
 	}
 
@@ -268,21 +327,25 @@ class FileLibTest extends CakeTestCase {
 
 	/** Helper Functions **/
 
-	public function _printArrays($status, $is, $expected, $pre = null) {
+	/**
+	 * FileLibTest::_printArrays()
+	 *
+	 * @param mixed $status
+	 * @param mixed $is
+	 * @param mixed $expected
+	 * @param mixed $pre
+	 * @return void
+	 */
+	protected function _printArrays($status, $is, $expected, $pre = null) {
 		if (!isset($_GET['show_passes']) || !$_GET['show_passes']) {
 			return false;
 		}
 
-		if ($pre !== null) {
-			//echo 'pre:';
-			//pr($pre);
-		}
-		//echo 'is:';
-		//pr($is);
-		if (!$status) {
-			//echo 'expected:';
-			//pr($expected);
-		}
+		echo 'Result:';
+		pr($is);
+
+		echo 'Expected:';
+		pr($expected);
 	}
 
 }
