@@ -14,10 +14,10 @@ class IcalHelper extends AppHelper {
 
 	public $Ical;
 
-	protected $_data = array();
+	protected $_data = [];
 
-	public function __construct($View = null, $settings = array()) {
-		parent::__construct($View, $settings);
+	public function __construct($View = null, $config = []) {
+		parent::__construct($View, $config);
 
 		$this->Ical = new IcalLib();
 	}
@@ -28,15 +28,16 @@ class IcalHelper extends AppHelper {
 	 * @return void
 	 */
 	public function reset() {
-		$this->$_data = array();
+		$this->_data = [];
 	}
 
 	/**
 	 * Add a new ical record.
 	 *
+	 * @param array $data
 	 * @return bool Success
 	 */
-	public function add($data = array()) {
+	public function add($data = []) {
 		//TODO: validate!
 		$this->_data[] = $data;
 
@@ -46,10 +47,12 @@ class IcalHelper extends AppHelper {
 	/**
 	 * Returns complete ical calender file content to output.
 	 *
+	 * @param array $globalData
+	 * @param bool $addStartAndEnd
 	 * @return string
 	 */
-	public function generate($globalData = array(), $addStartAndEnd = true) {
-		$res = array();
+	public function generate($globalData = [], $addStartAndEnd = true) {
+		$res = [];
 		foreach ($this->_data as $data) {
 			$res[] = $this->Ical->build($data);
 		}

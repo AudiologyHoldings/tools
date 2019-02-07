@@ -12,6 +12,7 @@ if (!defined('CR')) {
 }
 App::uses('Folder', 'Utility');
 App::uses('AppShell', 'Console/Command');
+App::uses('CakeText', 'Utility');
 
 /**
  * Indent Shell
@@ -33,24 +34,23 @@ App::uses('AppShell', 'Console/Command');
  *
  * Oh, and: Use TABS for indentation of code - ALWAYS.
  *
- * @cakephp 2.x
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class IndentShell extends AppShell {
 
-	public $settings = array(
-		'files' => array('php', 'ctp', 'inc', 'tpl'),
+	public $settings = [
+		'files' => ['php', 'ctp', 'inc', 'tpl'],
 		'againWithHalf' => false, # if 4, go again with 2 afterwards
 		'outputToTmp' => false, # write to filename_.ext
 		'debug' => false # add debug info after each line
-	);
+	];
 
 	protected $_changes = null;
 
-	protected $_paths = array();
+	protected $_paths = [];
 
-	protected $_files = array();
+	protected $_files = [];
 
 	/**
 	 * Main execution function to indent a folder recursivly
@@ -93,7 +93,7 @@ class IndentShell extends AppShell {
 			if (!empty($this->params['dry-run'])) {
 				$this->out('TEST DONE');
 			} else {
-				$continue = $this->in(__('Modifying files! Continue?'), array('y', 'n'), 'n');
+				$continue = $this->in('Modifying files! Continue?', ['y', 'n'], 'n');
 				if (strtolower($continue) !== 'y' && strtolower($continue) !== 'yes') {
 					return $this->error('...aborted');
 				}
@@ -101,7 +101,6 @@ class IndentShell extends AppShell {
 				$this->_correctFiles();
 				$this->out('DONE');
 			}
-
 		} else {
 			$this->out('Usage: cake intend folder');
 			$this->out('"folder" is then intended recursivly');
@@ -142,7 +141,7 @@ class IndentShell extends AppShell {
 	protected function _read($file) {
 		$text = file_get_contents($file);
 		if (empty($text)) {
-			return array();
+			return [];
 		}
 		$pieces = explode(NL, $text);
 		return $pieces;
@@ -157,7 +156,7 @@ class IndentShell extends AppShell {
 	protected function _correctFiles() {
 		foreach ($this->_files as $file) {
 			$this->_changes = false;
-			$textCorrect = array();
+			$textCorrect = [];
 
 			$pieces = $this->_read($file);
 			$spacesPerTab = $this->params['spaces'];
@@ -203,7 +202,7 @@ class IndentShell extends AppShell {
 		}
 
 		$newPiece = rtrim($newPiece) . $debug;
-		if ($newPiece != $piece || strlen($newPiece) !== strlen($piece)) {
+		if ($newPiece !== $piece || strlen($newPiece) !== strlen($piece)) {
 			$this->_changes = true;
 		}
 		return $newPiece;
@@ -211,18 +210,24 @@ class IndentShell extends AppShell {
 
 	/**
 	 * NEW TRY!
-	 * idea: hardcore replaceing
+	 * idea: hardcoded replaceing
 	 *
 	 * @deprecated
 	 */
-	protected function _processSpaceErrors($piece) {
-		$space = 1;
-
+	protected function _processSpaceErrors($piece, $space = 1) {
 		$newPiece = $piece;
-		if (mb_substr($piece, 0, $space) === ' ' && mb_substr($piece, $space, 1) === TB) {
-			$newPiece = mb_substr($piece, $space);
+		$spaceChar = str_repeat(' ', $space);
+		// At the beginning of the line
+		if (mb_substr($newPiece, 0, $space) === $spaceChar && mb_substr($newPiece, $space, 1) === TB) {
+			$newPiece = mb_substr($newPiece, $space);
 		}
-		if ($newPiece != $piece || strlen($newPiece) !== strlen($piece)) {
+		// In the middle
+		if (($pos = mb_strpos($newPiece, $space)) > 0 && mb_substr($newPiece, $pos - 1, 1) === TB
+			&& mb_substr($newPiece, $pos + 1, 1) === TB) {
+			$newPiece = mb_substr($newPiece, $pos) . mb_substr($newPiece, $pos + 2);
+		}
+		$newPiece = str_replace(TB . $spaceChar . TB, TB . TB, $newPiece);
+		if ($newPiece !== $piece) {
 			$this->_changes = true;
 		}
 		return $newPiece;
@@ -237,7 +242,7 @@ class IndentShell extends AppShell {
 	protected function _correctFilesTry() {
 		foreach ($this->_files as $file) {
 			$changes = false;
-			$textCorrect = array();
+			$textCorrect = [];
 
 			$pieces = $this->_read($file);
 			foreach ($pieces as $piece) {
@@ -302,7 +307,7 @@ class IndentShell extends AppShell {
 				$this->_write($file, $textCorrect);
 			}
 			//die();
-		}
+}
 	}
 
 	/**
@@ -324,47 +329,47 @@ class IndentShell extends AppShell {
 	}
 
 	public function getOptionParser() {
-		$subcommandParser = array(
-			'options' => array(
-				'dry-run' => array(
+		$subcommandParser = [
+			'options' => [
+				'dry-run' => [
 					'short' => 'd',
-					'help' => __d('cake_console', 'Dry run the update, no files will actually be modified.'),
+					'help' => 'Dry run the update, no files will actually be modified.',
 					'boolean' => true
-				),
-				'log' => array(
+				],
+				'log' => [
 					'short' => 'l',
-					'help' => __d('cake_console', 'Log all ouput to file log.txt in TMP dir'),
+					'help' => 'Log all ouput to file log.txt in TMP dir',
 					'boolean' => true
-				),
-				'interactive' => array(
+				],
+				'interactive' => [
 					'short' => 'i',
-					'help' => __d('cake_console', 'Interactive'),
+					'help' => 'Interactive',
 					'boolean' => true
-				),
-				'spaces' => array(
+				],
+				'spaces' => [
 					'short' => 's',
-					'help' => __d('cake_console', 'Spaces per Tab'),
+					'help' => 'Spaces per Tab',
 					'default' => '4',
-				),
-				'extensions' => array(
+				],
+				'extensions' => [
 					'short' => 'e',
-					'help' => __d('cake_console', 'Extensions (comma-separated)'),
+					'help' => 'Extensions (comma-separated)',
 					'default' => '',
-				),
-				'again' => array(
+				],
+				'again' => [
 					'short' => 'a',
-					'help' => __d('cake_console', 'Again (with half) afterwards'),
+					'help' => 'Again (with half) afterwards',
 					'boolean' => true
-				),
-			)
-		);
+				],
+			]
+		];
 
 		return parent::getOptionParser()
-			->description(__d('cake_console', "Correct indentation of files"))
-			->addSubcommand('folder', array(
-				'help' => __d('cake_console', 'Indent all files in a folder'),
+			->description("Correct indentation of files")
+			->addSubcommand('folder', [
+				'help' => 'Indent all files in a folder',
 				'parser' => $subcommandParser
-			));
+			]);
 	}
 
 }

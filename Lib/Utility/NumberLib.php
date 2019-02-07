@@ -25,14 +25,14 @@ class NumberLib extends CakeNumber {
 	 *
 	 * @return void
 	 */
-	public static function config($options = array()) {
+	public static function config($options = []) {
 		$config = $options + (array)Configure::read('Localization');
 		foreach ($config as $key => $value) {
 			$key = '_' . $key;
-			if (!isset(self::${$key})) {
+			if (!isset(static::${$key})) {
 				continue;
 			}
-			self::${$key} = $value;
+			static::${$key} = $value;
 		}
 	}
 
@@ -49,7 +49,7 @@ class NumberLib extends CakeNumber {
 	 * @deprecated use currency()
 	 * @return string
 	 */
-	public static function price($price, $specialPrice = null, $formatOptions = array()) {
+	public static function price($price, $specialPrice = null, $formatOptions = []) {
 		if ($specialPrice !== null && $specialPrice > 0) {
 			$val = $specialPrice;
 		} elseif ($price > 0 || !empty($formatOptions['allowNegative'])) {
@@ -60,7 +60,7 @@ class NumberLib extends CakeNumber {
 			}
 			$val = max(0, $price);
 		}
-		return self::money($val, $formatOptions);
+		return static::money($val, $formatOptions);
 	}
 
 	/**
@@ -70,8 +70,8 @@ class NumberLib extends CakeNumber {
 	 * @param array $formatOptions
 	 * @return string
 	 */
-	public static function money($amount, $formatOptions = array()) {
-		return self::currency($amount, null, $formatOptions);
+	public static function money($amount, $formatOptions = []) {
+		return static::currency($amount, null, $formatOptions);
 	}
 
 	/**
@@ -83,7 +83,7 @@ class NumberLib extends CakeNumber {
 	 * @param array $options : currency=true/false, ... (leave empty for no special treatment)
 	 * @return string
 	 */
-	public static function format($number, $formatOptions = array()) {
+	public static function format($number, $formatOptions = []) {
 		if (!is_numeric($number)) {
 			$default = '---';
 			if (!empty($options['default'])) {
@@ -92,18 +92,18 @@ class NumberLib extends CakeNumber {
 			return $default;
 		}
 		if ($formatOptions === false) {
-			$formatOptions = array();
+			$formatOptions = [];
 		} elseif (!is_array($formatOptions)) {
-			$formatOptions = array('places' => $formatOptions);
+			$formatOptions = ['places' => $formatOptions];
 		}
-		$options = array('before' => '', 'after' => '', 'places' => 2, 'thousands' => self::$_thousands, 'decimals' => self::$_decimals, 'escape' => false);
-		$options = array_merge($options, $formatOptions);
+		$options = ['before' => '', 'after' => '', 'places' => 2, 'thousands' => static::$_thousands, 'decimals' => static::$_decimals, 'escape' => false];
+		$options = $formatOptions + $options;
 
 		if (!empty($options['currency'])) {
-			if (!empty(self::$_symbolRight)) {
-				$options['after'] = ' ' . self::$_symbolRight;
-			} elseif (!empty(self::$_symbolLeft)) {
-				$options['before'] = self::$_symbolLeft . ' ';
+			if (!empty(static::$_symbolRight)) {
+				$options['after'] = ' ' . static::$_symbolRight;
+			} elseif (!empty(static::$_symbolLeft)) {
+				$options['before'] = static::$_symbolLeft . ' ';
 			}
 		}
 
@@ -140,25 +140,25 @@ class NumberLib extends CakeNumber {
 	 * @param array $formatOptions
 	 * @return string
 	 */
-	public static function currency($number, $currency = null, $formatOptions = array()) {
+	public static function currency($number, $currency = null, $formatOptions = []) {
 		if ($currency === null) {
-			$currency = self::$_currency;
+			$currency = static::$_currency;
 		}
-		$defaults = array();
-		if ($currency !== 'EUR' && isset(self::$_currencies[$currency])) {
-			$defaults = self::$_currencies[$currency];
+		$defaults = [];
+		if ($currency !== 'EUR' && isset(static::$_currencies[$currency])) {
+			$defaults = static::$_currencies[$currency];
 		} elseif ($currency !== 'EUR' && is_string($currency)) {
 			$defaults['wholeSymbol'] = $currency;
 			$defaults['wholePosition'] = 'before';
 			$defaults['spacer'] = true;
 		}
-		$defaults += array(
+		$defaults += [
 			'wholeSymbol' => '€', 'wholePosition' => 'after',
 			'negative' => '-', 'positive' => '+', 'escape' => true,
 			'decimals' => ',', 'thousands' => '.',
 			'spacer' => $currency === 'EUR' ? true : false
-		);
-		$options = array_merge($defaults, $formatOptions);
+		];
+		$options = $formatOptions + $defaults;
 
 		if (!empty($options['spacer'])) {
 			$spacer = is_string($options['spacer']) ? $options['spacer'] : ' ';
@@ -174,6 +174,7 @@ class NumberLib extends CakeNumber {
 		if ($number > 0 && !empty($options['signed'])) {
 			$sign = $options['positive'];
 		}
+		$options['signed'] = false;
 		return $sign . parent::currency($number, null, $options);
 	}
 
@@ -223,12 +224,12 @@ class NumberLib extends CakeNumber {
 	 * @return string Percentage string
 	 * @link http://book.cakephp.org/2.0/en/core-libraries/helpers/number.html#NumberHelper::toPercentage
 	 */
-	public static function toPercentage($number, $precision = 2, $options = array()) {
-		$options += array('multiply' => false, 'decimals' => '.');
+	public static function toPercentage($number, $precision = 2, $options = []) {
+		$options += ['multiply' => false, 'decimals' => '.'];
 		if ($options['multiply']) {
 			$number *= 100;
 		}
-		return self::precision($number, $precision, $options['decimals']) . '%';
+		return static::precision($number, $precision, $options['decimals']) . '%';
 	}
 
 	/**
@@ -253,7 +254,7 @@ class NumberLib extends CakeNumber {
 	 * @return float result
 	 */
 	public static function roundTo($number, $increments = 1.0) {
-		$precision = self::getDecimalPlaces($increments);
+		$precision = static::getDecimalPlaces($increments);
 		$res = round($number, $precision);
 		if ($precision <= 0) {
 			$res = (int)$res;
@@ -348,10 +349,10 @@ class NumberLib extends CakeNumber {
 	 * @return array currencySettings or null on failure
 	 */
 	public static function getFormat($formatName) {
-		if (!isset(self::$_currencies[$formatName])) {
+		if (!isset(static::$_currencies[$formatName])) {
 			return null;
 		}
-		return self::$_currencies[$formatName];
+		return static::$_currencies[$formatName];
 	}
 
 }

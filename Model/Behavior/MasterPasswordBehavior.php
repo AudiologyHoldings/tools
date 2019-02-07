@@ -26,14 +26,14 @@ App::uses('ModelBehavior', 'Model');
  *
  * @author Mark Scherer
  * @link http://github.com/dereuromark/
- * @license http://www.opensource.org/licenses/mit-license.php The MIT License
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 
 /**
  */
 class MasterPasswordBehavior extends ModelBehavior {
 
-	protected $_defaultConfig = array(
+	protected $_defaultConfig = [
 		'message' => 'Incorrect Master Password',
 		'field' => 'master_pwd',
 		'model' => null,
@@ -41,20 +41,20 @@ class MasterPasswordBehavior extends ModelBehavior {
 		'hash' => 'sha1',
 		'salt' => false, //TODO: maybe allow to use core salt for additional security?
 		'log' => false //TODO: log the usage of pwds to a log file `master_password`
-	);
+	];
 
-	public function setup(Model $Model, $config = array()) {
+	public function setup(Model $Model, $config = []) {
 		if (!isset($this->settings[$Model->alias])) {
 			$this->settings[$Model->alias] = $this->_defaultConfig;
 		}
-		$this->settings[$Model->alias] = array_merge($this->settings[$Model->alias], $config);
+		$this->settings[$Model->alias] = $config + $this->settings[$Model->alias];
 		// deactivate dynamically
 		if (Configure::read('MasterPassword.password') === false) {
 			$this->settings[$Model->alias]['before'] = '';
 		}
 	}
 
-	public function beforeValidate(Model $Model, $options = array()) {
+	public function beforeValidate(Model $Model, $options = []) {
 		$return = parent::beforeValidate($Model, $options);
 
 		if ($this->settings[$Model->alias]['before'] === 'validate') {
@@ -66,7 +66,7 @@ class MasterPasswordBehavior extends ModelBehavior {
 		return $return;
 	}
 
-	public function beforeSave(Model $Model, $options = array()) {
+	public function beforeSave(Model $Model, $options = []) {
 		$return = parent::beforeSave($Model, $options);
 
 		if ($this->settings[$Model->alias]['before'] === 'save') {
@@ -79,7 +79,7 @@ class MasterPasswordBehavior extends ModelBehavior {
 	/**
 	 * Run before a model is saved, used...
 	 *
-	 * @param object $Model Model about to be saved.
+	 * @param Model $Model Model about to be saved.
 	 * @return bool true if save should proceed, false otherwise
 	 */
 	public function confirm(Model $Model, $return = true) {
@@ -87,8 +87,8 @@ class MasterPasswordBehavior extends ModelBehavior {
 		$message = $this->settings[$Model->alias]['message'];
 
 		if (!$this->isAuthorized($Model, $field)) {
-				$Model->invalidate($field, $message);
-				return false;
+			$Model->invalidate($field, $message);
+			return false;
 		}
 
 		return $return;

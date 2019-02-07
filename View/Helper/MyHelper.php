@@ -7,7 +7,7 @@ App::uses('UrlCacheManager', 'Tools.Routing');
  * Helper enhancements for CakePHP
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class MyHelper extends Helper {
 
@@ -20,11 +20,11 @@ class MyHelper extends Helper {
 	 * @param bool $callbacks - trigger missed callbacks
 	 * @return void
 	 */
-	public function loadHelpers($helpers = array(), $callbacks = false) {
+	public function loadHelpers($helpers = [], $callbacks = false) {
 		foreach ((array)$helpers as $helper => $config) {
 			if (is_int($helper)) {
 				$helper = $config;
-				$config = array();
+				$config = [];
 			}
 			list($plugin, $helperName) = pluginSplit($helper, true);
 			if (isset($this->{$helperName})) {
@@ -51,6 +51,9 @@ class MyHelper extends Helper {
 		if (!Configure::read('UrlCache.active') || Configure::read('UrlCache.runtime.beforeRender')) {
 			return;
 		}
+		if (empty($this->request)) {
+			return;
+		}
 
 		// todo: maybe lazy load with HtmlHelper::url()?
 		UrlCacheManager::init($this->_View);
@@ -64,6 +67,9 @@ class MyHelper extends Helper {
 	 */
 	public function afterLayout($layoutFile) {
 		if (!Configure::read('UrlCache.active') || Configure::read('UrlCache.runtime.afterLayout')) {
+			return;
+		}
+		if (empty($this->request)) {
 			return;
 		}
 
@@ -116,7 +122,7 @@ class MyHelper extends Helper {
 	 *   `plugin` False value will prevent parsing path as a plugin
 	 * @return string Generated url
 	 */
-	public function assetUrl($path, $options = array()) {
+	public function assetUrl($path, $options = []) {
 		if (!Configure::read('App.assetBaseUrl')) {
 			return parent::assetUrl($path, $options);
 		}

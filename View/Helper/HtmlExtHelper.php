@@ -1,5 +1,6 @@
 <?php
-App::uses('HtmlHelper', 'View/Helper');
+App::uses('HtmlShimHelper', 'Shim.View/Helper');
+App::uses('CommonComponent', 'Tools.Controller/Component');
 
 /**
  * HtmlExt Helper
@@ -8,9 +9,9 @@ App::uses('HtmlHelper', 'View/Helper');
  * Use with aliasing to map it back to $this->Html attribute.
  *
  * @author Mark Scherer
- * @license MIT License (http://www.opensource.org/licenses/mit-license.php)
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
-class HtmlExtHelper extends HtmlHelper {
+class HtmlExtHelper extends HtmlShimHelper {
 
 	/**
 	 * For convenience functions Html::defaultLink() and defaultUrl().
@@ -30,8 +31,8 @@ class HtmlExtHelper extends HtmlHelper {
 	 * @param array $options
 	 * @return string html imageTag
 	 */
-	public function imageFromBlob($content, $options = array()) {
-		$options += array('type' => 'png');
+	public function imageFromBlob($content, $options = []) {
+		$options += ['type' => 'png'];
 		$mimeType = 'image/' . $options['type'];
 
 		$text = 'data:' . $mimeType . ';base64,' . base64_encode($content);
@@ -54,15 +55,16 @@ class HtmlExtHelper extends HtmlHelper {
 	 * @param $options array Options
 	 * @return string HTML time tag.
 	 */
-	public function time($content, $options = array()) {
+	public function time($content, $options = []) {
 		if (!isset($this->tags['time'])) {
 			$this->tags['time'] = '<time%s>%s</time>';
 		}
-		$options = array_merge(array(
+		$defaults = [
 			'datetime' => '%Y-%m-%d %T',
 			'pubdate' => false,
 			'format' => '%Y-%m-%d %T',
-		), $options);
+		];
+		$options += $defaults;
 
 		if ($options['format'] !== null) {
 			if (!isset($this->Time)) {
@@ -86,7 +88,7 @@ class HtmlExtHelper extends HtmlHelper {
 		}
 		unset($options['format']);
 		unset($options['pubdate']);
-		$attributes = $this->_parseAttributes($options, array(0), ' ', '');
+		$attributes = $this->_parseAttributes($options, [0], ' ', '');
 
 		if (isset($pubdate)) {
 			$attributes .= ' pubdate';
@@ -100,14 +102,14 @@ class HtmlExtHelper extends HtmlHelper {
 	 * @params same as Html::link($title, $url, $options, $confirmMessage)
 	 * @return string Link
 	 */
-	public function completeLink($title, $url = null, $options = array(), $confirmMessage = false) {
-		// Named are deprecated
+	public function completeLink($title, $url = null, $options = [], $confirmMessage = false) {
 		if (is_array($url)) {
+			// Named are deprecated
 			$url += $this->params['named'];
-		}
-		if (is_array($url)) {
+
+			// Add query strings
 			if (!isset($url['?'])) {
-				$url['?'] = array();
+				$url['?'] = [];
 			}
 			$url['?'] += $this->request->query;
 		}
@@ -121,17 +123,30 @@ class HtmlExtHelper extends HtmlHelper {
 	 * @return string Link
 	 */
 	public function completeUrl($url = null, $full = false, $escape = true) {
-		// Named are deprecated
 		if (is_array($url)) {
+			// Named are deprecated
 			$url += $this->params['named'];
-		}
-		if (is_array($url)) {
+
+			// Add query strings
 			if (!isset($url['?'])) {
-				$url['?'] = array();
+				$url['?'] = [];
 			}
 			$url['?'] += $this->request->query;
 		}
-		return $this->url($url, $options, $escape);
+		return $this->url($url, $full, $escape);
+	}
+
+	/**
+	 * Convenience function for normal links.
+	 * Useful for layout links and links inside elements etc if you don't want to
+	 * verbosely reset all parts of it (prefix, plugin, ...).
+	 *
+	 * @params same as Html::link($title, $url, $options, $confirmMessage)
+	 * @return string HTML Link
+	 * @deprecated Use HtmlExtHelper::resetLink() instead
+	 */
+	public function defaultLink($title, $url = null, $options = [], $confirmMessage = false) {
+		return $this->resetLink($title, $url, $options, $confirmMessage);
 	}
 
 	/**
@@ -142,11 +157,8 @@ class HtmlExtHelper extends HtmlHelper {
 	 * @params same as Html::link($title, $url, $options, $confirmMessage)
 	 * @return string HTML Link
 	 */
-	public function defaultLink($title, $url = null, $options = array(), $confirmMessage = false) {
+	public function resetLink($title, $url = null, $options = [], $confirmMessage = false) {
 		if ($this->_linkDefaults === null) {
-			if (!class_exists('CommonComponent')) {
-				App::uses('CommonComponent', 'Tools.Controller/Component');
-			}
 			$this->_linkDefaults = CommonComponent::defaultUrlParams();
 		}
 		if (!defined('PREFIX_ADMIN')) {
@@ -163,7 +175,6 @@ class HtmlExtHelper extends HtmlHelper {
 				$options['rel'] = 'nofollow';
 			}
 		}
-		//$this->log($url, '404');
 		return $this->link($title, $url, $options, $confirmMessage);
 	}
 
@@ -174,12 +185,22 @@ class HtmlExtHelper extends HtmlHelper {
 	 *
 	 * @params same as Html::url($url, $full)
 	 * @return string URL
+	 * @deprecated Use HtmlExtHelper::resetUrl() instead
 	 */
 	public function defaultUrl($url = null, $full = false) {
+		return $this->resetUrl($url, $full);
+	}
+
+	/**
+	 * Convenience function for normal urls.
+	 * Useful for layout links and links inside elements etc if you don't want to
+	 * verbosely reset all parts of it (prefix, plugin, ...).
+	 *
+	 * @params same as Html::url($url, $full)
+	 * @return string URL
+	 */
+	public function resetUrl($url = null, $full = false) {
 		if ($this->_linkDefaults === null) {
-			if (!class_exists('CommonComponent')) {
-				App::uses('CommonComponent', 'Tools.Controller/Component');
-			}
 			$this->_linkDefaults = CommonComponent::defaultUrlParams();
 		}
 		if ($url !== null && is_array($url)) {
@@ -195,7 +216,7 @@ class HtmlExtHelper extends HtmlHelper {
 	 * @return void
 	 */
 	public function resetCrumbs() {
-		$this->_crumbs = array();
+		$this->_crumbs = [];
 	}
 
 }

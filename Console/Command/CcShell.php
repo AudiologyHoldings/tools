@@ -4,7 +4,7 @@ App::uses('Folder', 'Utility');
 App::uses('File', 'Utility');
 
 if (!defined('LF')) {
-	define('LF', PHP_EOL); # use PHP to detect default linebreak
+	define('LF', PHP_EOL); // Use PHP to detect default linebreak
 }
 
 /**
@@ -12,9 +12,8 @@ if (!defined('LF')) {
  * Workes perfectly with PHPDesigner - but should also work with most other IDEs out of the box
  *
  * @version 1.1
- * @cakephp 2.x
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class CcShell extends AppShell {
 
@@ -22,7 +21,7 @@ class CcShell extends AppShell {
 
 	public $content = '';
 
-	public $appFiles = array();
+	public $appFiles = [];
 
 	/**
 	 * CcShell::main()
@@ -176,7 +175,6 @@ class CcShell extends AppShell {
 	protected function _prepModels($files) {
 		$res = '';
 		foreach ($files as $name) {
-
 			$res .= '
 	/**
 	* ' . $name . '
@@ -358,22 +356,22 @@ class CcShell extends AppShell {
 		}
 
 		if (!isset($this->plugins)) {
-			$this->plugins = App::objects('plugin');
+			$this->plugins = CakePlugin::loaded();
 		}
 
 		if (!empty($this->plugins)) {
 			foreach ($this->plugins as $plugin) {
 				$pluginType = $plugin . '.' . $type;
-					$pluginFiles = App::objects($pluginType, null, false);
-					if (!empty($pluginFiles)) {
-						foreach ($pluginFiles as $file) {
-							if (strpos($file, 'App' . $type) !== false) {
-								//$this->appFiles[$file] = $plugin.'.'.$type;
+				$pluginFiles = App::objects($pluginType, null, false);
+				if (!empty($pluginFiles)) {
+					foreach ($pluginFiles as $file) {
+						if (strpos($file, 'App' . $type) !== false) {
+							//$this->appFiles[$file] = $plugin.'.'.$type;
 								continue;
-							}
-							$files[] = $file;
 						}
+						$files[] = $file;
 					}
+				}
 			}
 		}
 		$files = array_unique($files);

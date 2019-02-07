@@ -11,7 +11,7 @@ if (!defined('BR')) {
  *
  * @author Mark Scherer
  * @link http://www.dereuromark.de
- * @license MIT License (http://www.opensource.org/licenses/mit-license.php)
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 
 /**
@@ -19,31 +19,28 @@ if (!defined('BR')) {
  */
 class CaptchaHelper extends AppHelper {
 
-	public $helpers = array('Form');
+	public $helpers = ['Form'];
 
-	protected $_defaults = array(
+	protected $_defaultConfig = [
 		'difficulty' => 1, # initial diff. level (@see operator: + = 0, +- = 1, +-* = 2)
 		'raiseDifficulty' => 2, # number of failed trails, after the x. one the following one it will be more difficult
-	);
+	];
 
 	protected $numberConvert = null;
 
 	protected $operatorConvert = null;
 
-	public function __construct($View = null, $settings = array()) {
-		parent::__construct($View, $settings);
+	public function __construct($View = null, $config = []) {
+		$defaults = CaptchaLib::$defaults + $this->_defaultConfig;
+		$defaults = (array)Configure::read('Captcha') + $defaults;
+		$config += $defaults;
+		parent::__construct($View, $config);
 
 		// First of all we are going to set up an array with the text equivalents of all the numbers we will be using.
-		$this->numberConvert = array(0 => 'zero', 1 => 'one', 2 => 'two', 3 => 'three', 4 => 'four', 5 => 'five', 6 => 'six', 7 => 'seven', 8 => 'eight', 9 => 'nine', 10 => 'ten');
+		$this->numberConvert = [0 => __d('tools', 'zero'), 1 => __d('tools', 'one'), 2 => __d('tools', 'two'), 3 => __d('tools', 'three'), 4 => __d('tools', 'four'), 5 => __d('tools', 'five'), 6 => __d('tools', 'six'), 7 => __d('tools', 'seven'), 8 => __d('tools', 'eight'), 9 => __d('tools', 'nine'), 10 => __d('tools', 'ten')];
 
 		// Set up an array with the operators that we want to use. With difficulty=1 it is only subtraction and addition.
-		$this->operatorConvert = array(0 => array('+', __('calcPlus')), 1 => array('-', __('calcMinus')), 2 => '*', __('calcTimes'));
-
-		$this->settings = array_merge(CaptchaLib::$defaults, $this->_defaults);
-		$settings = (array)Configure::read('Captcha');
-		if (!empty($settings)) {
-			$this->settings = array_merge($this->settings, $settings);
-		}
+		$this->operatorConvert = [0 => ['+', __d('tools', 'calcPlus')], 1 => ['-', __d('tools', 'calcMinus')], 2 => '*', __d('tools', 'calcTimes')];
 	}
 
 	/**
@@ -63,12 +60,12 @@ class CaptchaHelper extends AppHelper {
 		$captchaOperator = $captchaOperatorSelection[mt_rand(0, 1)];
 
 		// Get the equation in textual form to show to the user.
-		$code = (mt_rand(0, 1) == 1 ? __($this->numberConvert[$numberOne]) : $numberOne) . ' ' . $captchaOperator . ' ' . (mt_rand(0, 1) == 1 ? __($this->numberConvert[$numberTwo]) : $numberTwo);
+		$code = (mt_rand(0, 1) == 1 ? $this->numberConvert[$numberOne] : $numberOne) . ' ' . $captchaOperator . ' ' . (mt_rand(0, 1) == 1 ? $this->numberConvert[$numberTwo] : $numberTwo);
 
 		// Evaluate the equation and get the result.
 		eval('$result = ' . $numberOne . ' ' . $captchaOperatorSelection[0] . ' ' . $numberTwo . ';');
 
-		return array('code' => $code, 'result' => $result);
+		return ['code' => $code, 'result' => $result];
 	}
 
 	/**
@@ -95,7 +92,7 @@ class CaptchaHelper extends AppHelper {
 
 		$return = '';
 
-		if (in_array($this->settings['type'], array('active', 'both'))) {
+		if (in_array($this->settings['type'], ['active', 'both'])) {
 			// //todo obscure html here?
 			$fill = ''; //'<span></span>';
 			$return .= '<span id="captchaCode">' . $fill . '' . $captchaCode['code'] . '</span>';
@@ -105,9 +102,9 @@ class CaptchaHelper extends AppHelper {
 
 		// add passive part on active forms as well
 		$return .= '<div style="display:none">' .
-			$this->Form->input($field . '_hash', array('value' => $hash)) .
-			$this->Form->input($field . '_time', array('value' => time())) .
-			$this->Form->input((!empty($modelName) ? $modelName . '.' : '') . $this->settings['dummyField'], array('value' => '')) .
+			$this->Form->input($field . '_hash', ['value' => $hash]) .
+			$this->Form->input($field . '_time', ['value' => time()]) .
+			$this->Form->input((!empty($modelName) ? $modelName . '.' : '') . $this->settings['dummyField'], ['value' => '']) .
 		'</div>';
 		return $return;
 	}
@@ -120,22 +117,22 @@ class CaptchaHelper extends AppHelper {
 	 * @param bool between: [default: true]
 	 * @return string HTML
 	 */
-	public function input($modelName = null, $options = array()) {
-		$defaultOptions = array(
+	public function input($modelName = null, $options = []) {
+		$defaults = [
 			'type' => 'text',
 			'class' => 'captcha',
 			'value' => '',
 			'maxlength' => 3,
-			'label' => __('Captcha') . BR . __('captchaExplained'),
+			'label' => __d('tools', 'Captcha') . BR . __d('tools', 'captchaExplained'),
 			'combined' => true,
 			'autocomplete' => 'off',
-			'after' => __('captchaTip'),
-		);
-		$options = array_merge($defaultOptions, $options);
+			'after' => __d('tools', 'captchaTip'),
+		];
+		$options += $defaults;
 
 		if ($options['combined'] === true) {
 			$options['between'] = $this->captcha($modelName);
-			if (in_array($this->settings['type'], array('active', 'both'))) {
+			if (in_array($this->settings['type'], ['active', 'both'])) {
 				$options['between'] .= ' = ';
 			}
 		}
@@ -150,7 +147,7 @@ class CaptchaHelper extends AppHelper {
 	 *
 	 * @return string HTML
 	 */
-	public function passive($modelName = null, $options = array()) {
+	public function passive($modelName = null, $options = []) {
 		$tmp = $this->settings['type'];
 		$this->settings['type'] = 'passive';
 		$res = $this->captcha($modelName);
@@ -164,7 +161,7 @@ class CaptchaHelper extends AppHelper {
 	 *
 	 * @return string Form input
 	 */
-	public function active($modelName = null, $options = array()) {
+	public function active($modelName = null, $options = []) {
 		return $this->input($modelName, $options);
 	}
 
@@ -181,7 +178,7 @@ class CaptchaHelper extends AppHelper {
 	 */
 	protected function _fieldName($modelName = null) {
 		$fieldName = 'captcha';
-		if (isSet($modelName)) {
+		if (isset($modelName)) {
 			$fieldName = $modelName . '.' . $fieldName;
 		}
 		return $fieldName;

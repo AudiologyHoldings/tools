@@ -4,7 +4,7 @@ App::uses('MyCakeTestCase', 'Tools.TestSuite');
 
 class MultipleDisplayFieldsBehaviorTest extends MyCakeTestCase {
 
-	public $fixtures = array('core.comment', 'core.user');
+	public $fixtures = ['core.comment', 'core.user'];
 
 	public $Comment;
 
@@ -16,15 +16,25 @@ class MultipleDisplayFieldsBehaviorTest extends MyCakeTestCase {
 		$this->MultipleDisplayFieldsBehavior = new MultipleDisplayFieldsBehavior();
 
 		$this->Comment = ClassRegistry::init('Comment');
-		$this->Comment->bindModel(array('belongsTo' => array('User')), false);
+		$this->Comment->bindModel(['belongsTo' => ['User']], false);
 		$this->Comment->displayField = 'comment';
 	}
 
+	/**
+	 * MultipleDisplayFieldsBehaviorTest::testObject()
+	 *
+	 * @return void
+	 */
 	public function testObject() {
 		$this->assertTrue(is_object($this->MultipleDisplayFieldsBehavior));
 		$this->assertInstanceOf('MultipleDisplayFieldsBehavior', $this->MultipleDisplayFieldsBehavior);
 	}
 
+	/**
+	 * MultipleDisplayFieldsBehaviorTest::testSimple()
+	 *
+	 * @return void
+	 */
 	public function testSimple() {
 		$this->Comment->Behaviors->load('Tools.MultipleDisplayFields');
 		$res = $this->Comment->find('first');
@@ -32,11 +42,11 @@ class MultipleDisplayFieldsBehaviorTest extends MyCakeTestCase {
 		$this->Comment->Behaviors->unload('MultipleDisplayFields');
 
 		// auto %s pattern
-		$config = array(
-			'fields' => array(
+		$config = [
+			'fields' => [
 				$this->Comment->alias . '.comment', $this->Comment->alias . '.published'
-			),
-		);
+			],
+		];
 		$this->Comment->Behaviors->load('Tools.MultipleDisplayFields', $config);
 		$res = $this->Comment->find('list');
 		$this->debug($res);
@@ -44,30 +54,35 @@ class MultipleDisplayFieldsBehaviorTest extends MyCakeTestCase {
 		$this->Comment->Behaviors->unload('MultipleDisplayFields');
 
 		// custom pattern
-		$config = array(
-			'fields' => array(
+		$config = [
+			'fields' => [
 				$this->Comment->alias . '.comment', $this->Comment->alias . '.published'
-			),
+			],
 			'pattern' => '%s (%s)',
-		);
+		];
 		$this->Comment->Behaviors->load('Tools.MultipleDisplayFields', $config);
 		$res = $this->Comment->find('list');
 		$this->debug($res);
 		$this->assertEquals('First Comment for First Article (Y)', $res[1]);
 	}
 
+	/**
+	 * MultipleDisplayFieldsBehaviorTest::testAdvanced()
+	 *
+	 * @return void
+	 */
 	public function testAdvanced() {
-		$config = array(
-			'fields' => array(
+		$config = [
+			'fields' => [
 				$this->Comment->alias . '.comment', $this->Comment->User->alias . '.user', $this->Comment->alias . '.published'
-			),
-			'displayField' => array('display_field'),
+			],
+			'displayField' => 'display_field',
 			'pattern' => '%s by %s (%s)',
-		);
+		];
 		$this->Comment->Behaviors->load('Tools.MultipleDisplayFields', $config);
-		$res = $this->Comment->find('list', array('contain' => array('User')));
+		$res = $this->Comment->find('all', ['order' => [], 'contain' => ['User']]);
 		$this->debug($res);
-		$this->assertEquals('First Comment for First Article by Y (nate)', $res[1]);
+		$this->assertEquals('First Comment for First Article by Y (nate)', $res[0]['Comment']['display_field']);
 	}
 
 }

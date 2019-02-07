@@ -7,29 +7,12 @@ App::uses('TimeHelper', 'View/Helper');
  */
 class DatetimeHelper extends TimeHelper {
 
-	public $helpers = array('Html');
+	public $helpers = ['Html'];
 
-	/**
-	 * @deprecated Let timezone handle that
-	 */
-	public $userOffset = null;
-
-	/**
-	 * @deprecated Let timezone handle that
-	 */
-	public $daylightSavings = false;
-
-	public function __construct($View = null, $settings = array()) {
-		$settings = Set::merge(array('engine' => 'Tools.TimeLib'), $settings);
-		parent::__construct($View, $settings);
-
-		$i18n = Configure::read('Localization');
-		if (!empty($i18n['time_offset'])) {
-			$this->userOffset = (int)$i18n['time_offset'];
-		}
-		if (!empty($i18n['daylight_savings'])) {
-			$this->daylightSavings = (bool)$i18n['daylight_savings'];
-		}
+	public function __construct($View = null, $config = []) {
+		$defaults = ['engine' => 'Tools.TimeLib'];
+		$config += $defaults;
+		parent::__construct($View, $config);
 	}
 
 	/**
@@ -37,23 +20,26 @@ class DatetimeHelper extends TimeHelper {
 	 * Defaults to the $default string if outside of that range.
 	 *
 	 * @param string date (from db)
+	 * @param string $default
 	 * @return int age on success, mixed $default otherwise
 	 */
-	public function userAge($date = null, $default = '---') {
+	public function userAge($date, $default = '---') {
 		if ((int)$date === 0) {
 			return $default;
 		}
 		$age = $this->age($date, null);
 		if ($age >= 1 && $age <= 99) {
 			return $age;
-			}
-			return $default;
+		}
+		return $default;
 	}
 
 	/**
 	 * Like localDate(), only with additional markup <span> and class="today", if today, etc
+	 *
+	 * @return string
 	 */
-	public function localDateMarkup($dateString = null, $format = null, $options = array()) {
+	public function localDateMarkup($dateString = null, $format = null, $options = []) {
 		$date = $this->localDate($dateString, $format, $options);
 		$date = '<span' . ($this->isToday($dateString, (isset($options['userOffset']) ? $options['userOffset'] : null)) ? ' class="today"' : '') . '>' . $date . '</span>';
 		return $date;
@@ -61,8 +47,10 @@ class DatetimeHelper extends TimeHelper {
 
 	/**
 	 * Like niceDate(), only with additional markup <span> and class="today", if today, etc
+	 *
+	 * @return string
 	 */
-	public function niceDateMarkup($dateString = null, $format = null, $options = array()) {
+	public function niceDateMarkup($dateString = null, $format = null, $options = []) {
 		$date = $this->niceDate($dateString, $format, $options);
 		$date = '<span' . ($this->isToday($dateString, (isset($options['userOffset']) ? $options['userOffset'] : null)) ? ' class="today"' : '') . '>' . $date . '</span>';
 		return $date;
@@ -78,17 +66,16 @@ class DatetimeHelper extends TimeHelper {
 	 * @param array $attr: html attributes
 	 * @return nicely formatted date
 	 */
-	public function published($dateString = null, $userOffset = null, $options = array(), $attr = array()) {
+	public function published($dateString = null, $userOffset = null, $options = [], $attr = []) {
 		$date = $dateString ? $this->fromString($dateString, $userOffset) : null; // time() ?
 		$niceDate = '';
 		$when = null;
 		$span = '';
 		$spanEnd = '';
-		$whenArray = array('-1' => 'already', '0' => 'today', '1' => 'notyet');
-		$titles = array('-1' => __('publishedAlready'), '0' => __('publishedToday'), '1' => __('publishedNotYet'));
+		$whenArray = ['-1' => 'already', '0' => 'today', '1' => 'notyet'];
+		$titles = ['-1' => __d('tools', 'publishedAlready'), '0' => __d('tools', 'publishedToday'), '1' => __d('tools', 'publishedNotYet')];
 
 		if (!empty($date)) {
-
 			$y = $this->isThisYear($date) ? '' : ' Y';
 
 			$format = (!empty($options['format']) ? $options['format'] : FORMAT_NICE_YMD);
@@ -103,13 +90,13 @@ class DatetimeHelper extends TimeHelper {
 
 			if ($this->isToday($date)) {
 				$when = 0;
-				$niceDate = __('Today') . $timeAttachment;
+				$niceDate = __d('tools', 'Today') . $timeAttachment;
 			} elseif ($this->isTomorrow($date)) {
 				$when = 1;
-				$niceDate = __('Tomorrow') . $timeAttachment;
+				$niceDate = __d('tools', 'Tomorrow') . $timeAttachment;
 			} elseif ($this->wasYesterday($date)) {
 				$when = -1;
-				$niceDate = __('Yesterday') . $timeAttachment;
+				$niceDate = __d('tools', 'Yesterday') . $timeAttachment;
 			} else {
 				// before or after?
 				if ($this->isNotTodayAndInTheFuture($date)) {
@@ -127,7 +114,6 @@ class DatetimeHelper extends TimeHelper {
 					$when = -1;
 				}
 			}
-
 		}
 
 		if (empty($niceDate) || $when === null) {
@@ -137,42 +123,13 @@ class DatetimeHelper extends TimeHelper {
 				$attr['title'] = $titles[$when];
 			}
 			$attr['class'] = 'published ' . $whenArray[$when];
-			//$span = '<span class="published '..'">';	// -1/-2 = ago | 1/2 = ahead | 0 = today
-			//$spanEnd = '</span>';
 		}
+
+		// Why is this hack necessary?
 		if (!isset($this->Html)) {
-			//TODO: fixme
-			$this->loadHelpers(array('Html'));
+			$this->Html = $this->_View->Html;
 		}
 		return $this->Html->tag('span', $niceDate, $attr);
-	}
-
-	/**
-	 * Takes time as hh:mm:ss,
-	 * returns hh:mm
-	 * TODO: move to lib, but more generic
-	 *
-	 * @param string $time
-	 * @return string Time
-	 */
-	public function niceTime($time) {
-		return substr($time, 0, 5);
-	}
-
-	/**
-	 * EXPERIMENTAL!!!
-	 *
-	 * @param
-	 * @param
-	 * @return int offset
-	 */
-	public function tzOffset($gmtoffset, $isDst) {
-		//global $gmtoffset, $isDst;
-		extract(getdate());
-		$serveroffset = gmmktime(0, 0, 0, $mon, $mday, $year) - mktime(0, 0, 0, $mon, $mday, $year);
-		$offset = $gmtoffset - $serveroffset;
-
-		return $offset + ($isDst ? 3600 : 0);
 	}
 
 	/**
@@ -181,7 +138,7 @@ class DatetimeHelper extends TimeHelper {
 	 * @return array
 	 */
 	public function timezones() {
-		$timezones = array(
+		$timezones = [
 			'America/Adak' => '(GMT-10:00) America/Adak (Hawaii-Aleutian Standard Time)',
 			'America/Atka' => '(GMT-10:00) America/Atka (Hawaii-Aleutian Standard Time)',
 			'America/Anchorage' => '(GMT-9:00) America/Anchorage (Alaska Standard Time)',
@@ -582,7 +539,7 @@ class DatetimeHelper extends TimeHelper {
 			'Antarctica/South_Pole' => '(GMT+12:00) Antarctica/South_Pole (New Zealand Standard Time)',
 			'Asia/Anadyr' => '(GMT+12:00) Asia/Anadyr (Anadyr Time)',
 			'Asia/Kamchatka' => '(GMT+12:00) Asia/Kamchatka (Petropavlovsk-Kamchatski Time)',
-		);
+		];
 		return $timezones;
 	}
 

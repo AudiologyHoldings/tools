@@ -7,6 +7,7 @@ if (!defined('USER_RIGHT_KEY')) {
 }
 
 App::uses('AuthComponent', 'Controller/Component');
+App::uses('Hash', 'Utility');
 
 /**
  * Convenience wrapper to access Auth data and check on rights/roles.
@@ -31,9 +32,8 @@ App::uses('AuthComponent', 'Controller/Component');
  * Note: This uses AuthComponent internally to work with both stateful and stateless auth.
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  * @php 5
- * @cakephp 2
  */
 class Auth {
 
@@ -88,7 +88,7 @@ class Auth {
 		if ($providedRoles !== null) {
 			$roles = $providedRoles;
 		} else {
-			$roles = self::roles();
+			$roles = static::roles();
 		}
 		if (is_array($roles)) {
 			if (in_array($ownRole, $roles)) {
@@ -117,7 +117,7 @@ class Auth {
 		if ($providedRoles !== null) {
 			$roles = $providedRoles;
 		} else {
-			$roles = self::roles();
+			$roles = static::roles();
 		}
 		$ownRoles = (array)$ownRoles;
 		if (empty($ownRoles)) {
@@ -125,7 +125,7 @@ class Auth {
 		}
 		$count = 0;
 		foreach ($ownRoles as $role) {
-			if (self::hasRole($role, $roles)) {
+			if (static::hasRole($role, $roles)) {
 				if ($oneRoleIsEnough) {
 					return true;
 				}

@@ -7,7 +7,7 @@ App::uses('AppHelper', 'View/Helper');
  * A CakePHP View Helper for the display of Gravatar images (http://www.gravatar.com)
  *
  * @copyright Copyright 2009-2010, Graham Weldon (http://grahamweldon.com)
- * @license http://www.opensource.org/licenses/mit-license.php The MIT License
+ * @license http://opensource.org/licenses/mit-license.php MIT
  *
  * hashtype now always md5
  */
@@ -18,81 +18,79 @@ class GravatarHelper extends AppHelper {
 	 *
 	 * @var string
 	 */
-	protected $_url = array(
+	protected $_url = [
 		'http' => 'http://www.gravatar.com/avatar/',
 		'https' => 'https://secure.gravatar.com/avatar/'
-	);
+	];
 
 	/**
 	 * Collection of allowed ratings
 	 *
 	 * @var array
 	 */
-	protected $_allowedRatings = array('g', 'pg', 'r', 'x');
+	protected $_allowedRatings = [
+		'g', 'pg', 'r', 'x'];
 
 	/**
 	 * Default Icon sets
 	 *
 	 * @var array
 	 */
-	protected $_defaultIcons = array('none', 'mm', 'identicon', 'monsterid', 'retro', 'wavatar', '404');
+	protected $_defaultIcons = [
+		'none', 'mm', 'identicon', 'monsterid', 'retro', 'wavatar', '404'];
 
 	/**
 	 * Default settings
 	 *
 	 * @var array
 	 */
-	protected $_default = array(
+	protected $_defaultConfig = [
 		'default' => null,
 		'size' => null,
 		'rating' => null,
-		'ext' => false);
+		'ext' => false];
 
 	/**
 	 * Helpers used by this helper
 	 *
 	 * @var array
 	 */
-	public $helpers = array('Html');
+	public $helpers = ['Html'];
 
 	/**
 	 * Constructor
 	 *
 	 */
-	public function __construct($View = null, $settings = array()) {
-		if (!is_array($settings)) {
-			$settings = array();
-		}
-		$this->_default = array_merge($this->_default, array_intersect_key($settings, $this->_default));
+	public function __construct($View = null, $config = []) {
+		$config += $this->_defaultConfig;
 
 		// Default the secure option to match the current URL.
-		$this->_default['secure'] = env('HTTPS');
-		parent::__construct($View, $settings);
+		$config['secure'] = env('HTTPS');
+		parent::__construct($View, $config);
 	}
 
 	/**
-	 * Show gravatar for the supplied email address
+	 * Shows gravatar for the supplied email address
 	 *
 	 * @param string $email Email address
 	 * @param array $options Array of options, keyed from default settings
 	 * @return string Gravatar image string
 	 */
-	public function image($email, $options = array()) {
+	public function image($email, $options = []) {
 		$imageUrl = $this->imageUrl($email, $options);
 		unset($options['default'], $options['size'], $options['rating'], $options['ext']);
 		return $this->Html->image($imageUrl, $options);
 	}
 
 	/**
-	 * Generate image URL
-	 * TODO: rename to avoid E_STRICT errors here
+	 * Generates image URL
 	 *
 	 * @param string $email Email address
 	 * @param string $options Array of options, keyed from default settings
 	 * @return string Gravatar Image URL
 	 */
-	public function imageUrl($email, $options = array()) {
-		$options = $this->_cleanOptions(array_merge($this->_default, $options));
+	public function imageUrl($email, $options = []) {
+		$options = $this->_cleanOptions($options + $this->settings);
 		$ext = $options['ext'];
 		$secure = $options['secure'];
 		unset($options['ext'], $options['secure']);
@@ -114,9 +112,9 @@ class GravatarHelper extends AppHelper {
 	 * @param array $options Array of options, keyed from default settings
 	 * @return array Default images array
 	 */
-	public function defaultImages($options = array()) {
-		$options = $this->_cleanOptions(array_merge($this->_default, $options));
-		$images = array();
+	public function defaultImages($options = []) {
+		$options = $this->_cleanOptions($options + $this->settings);
+		$images = [];
 		foreach ($this->_defaultIcons as $defaultIcon) {
 			$options['default'] = $defaultIcon;
 			$images[$defaultIcon] = $this->image(null, $options);
@@ -169,10 +167,10 @@ class GravatarHelper extends AppHelper {
 	 * @param array $options Array of options, keyed from default settings
 	 * @return string URL string of options
 	 */
-	protected function _buildOptions($options = array()) {
-		$gravatarOptions = array_intersect(array_keys($options), array_keys($this->_default));
+	protected function _buildOptions($options = []) {
+		$gravatarOptions = array_intersect(array_keys($options), array_keys($this->_defaultConfig));
 		if (!empty($gravatarOptions)) {
-			$optionArray = array();
+			$optionArray = [];
 			foreach ($gravatarOptions as $key) {
 				$value = $options[$key];
 				$optionArray[] = $key . '=' . mb_strtolower($value);
@@ -181,4 +179,5 @@ class GravatarHelper extends AppHelper {
 		}
 		return '';
 	}
+
 }

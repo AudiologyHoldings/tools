@@ -6,19 +6,19 @@ App::uses('WeatherLib', 'Tools.Lib');
  * Display weather in the view
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class WeatherHelper extends AppHelper {
 
-	public $helpers = array('Html');
+	public $helpers = ['Html'];
 
-	protected $_defaults = array(
+	protected $_defaultConfig = [
 		'imageUrl' => 'http://www.google.com/ig/images/weather/'
-	);
+	];
 
-	public function __construct($View = null, $settings = array()) {
-		$this->_defaults = (array)Configure::read('Weather') + $this->_defaults;
-		parent::__construct($View, $settings + $this->_defaults);
+	public function __construct($View = null, $settings = []) {
+		$this->_defaultConfig = (array)Configure::read('Weather') + $this->_defaultConfig;
+		parent::__construct($View, $settings + $this->_defaultConfig);
 	}
 
 	/**
@@ -38,13 +38,13 @@ class WeatherHelper extends AppHelper {
 	 *
 	 * @return array
 	 */
-	public function get($location, $cOptions = array()) {
+	public function get($location, $options = []) {
 		$Weather = new WeatherLib();
 
-		$options = array(
+		$defaults = [
 			'cache' => '+1 hour'
-		);
-		$options = array_merge($options, $cOptions);
+		];
+		$options += $defaults;
 		return $Weather->get($location, $options);
 	}
 

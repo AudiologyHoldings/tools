@@ -29,8 +29,8 @@ class FolderLib extends Folder {
 		$normalFiles = glob($path . '*');
 		$hiddenFiles = glob($path . '\.?*');
 
-		$normalFiles = $normalFiles ? $normalFiles : array();
-		$hiddenFiles = $hiddenFiles ? $hiddenFiles : array();
+		$normalFiles = $normalFiles ? $normalFiles : [];
+		$hiddenFiles = $hiddenFiles ? $hiddenFiles : [];
 
 		$files = array_merge($normalFiles, $hiddenFiles);
 		foreach ($files as $file) {
@@ -39,9 +39,9 @@ class FolderLib extends Folder {
 			}
 			if (is_file($file)) {
 				if (@unlink($file)) {
-					$this->_messages[] = __('%s removed', $file);
+					$this->_messages[] = __d('tools', '%s removed', $file);
 				} else {
-					$this->_errors[] = __('%s NOT removed', $file);
+					$this->_errors[] = __d('tools', '%s NOT removed', $file);
 				}
 			} elseif (is_dir($file) && $this->delete($file) === false) {
 				return false;

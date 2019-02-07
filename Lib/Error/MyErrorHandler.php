@@ -7,21 +7,38 @@ App::uses('Utility', 'Tools.Utility');
 class MyErrorHandler extends ErrorHandler {
 
 	/**
+	 * @var array
+	 */
+	protected static $whitelist = [
+		'MissingControllerException',
+		'MissingActionException',
+		'MissingViewException',
+		'PrivateActionException',
+		'NotFoundException',
+	];
+
+	/**
 	 * Override core one with the following enhancements/fixes:
 	 * - 404s log to a different domain
 	 * - IP, Referer and Browser-Infos are added for better error debugging/tracing
 	 */
-	public static function handleException(Exception $exception) {
+	public static function handleException($exception) {
 		$config = Configure::read('Exception');
 		if (!empty($config['log'])) {
 			$message = sprintf("[%s] %s\n%s\n%s",
 				get_class($exception),
 				$exception->getMessage(),
 				$exception->getTraceAsString(),
-				self::traceDetails()
+				static::traceDetails()
 			);
 			$log = LOG_ERR;
-			if (in_array(get_class($exception), array('MissingControllerException', 'MissingActionException', 'PrivateActionException', 'NotFoundException'))) {
+
+			$exceptions = static::$whitelist;
+			if (CakePlugin::loaded('Shim')) {
+				$exceptions[] = 'RecordNotFoundException';
+			}
+
+			if (in_array(get_class($exception), $exceptions)) {
 				$log = '404';
 			}
 			CakeLog::write($log, $message);
@@ -41,7 +58,7 @@ class MyErrorHandler extends ErrorHandler {
 				get_class($e),
 				$e->getMessage(),
 				$e->getTraceAsString(),
-				self::traceDetails()
+				static::traceDetails()
 			);
 			trigger_error($message, E_USER_ERROR);
 		}
@@ -57,14 +74,14 @@ class MyErrorHandler extends ErrorHandler {
 			return false;
 		}
 		$errorConfig = Configure::read('Error');
-		list($error, $log) = self::mapErrorCode($code);
+		list($error, $log) = static::mapErrorCode($code);
 		if ($log === LOG_ERR) {
-			return self::handleFatalError($code, $description, $file, $line);
+			return static::handleFatalError($code, $description, $file, $line);
 		}
 
 		$debug = Configure::read('debug');
 		if ($debug) {
-			$data = array(
+			$data = [
 				'level' => $log,
 				'code' => $code,
 				'error' => $error,
@@ -74,14 +91,14 @@ class MyErrorHandler extends ErrorHandler {
 				'context' => $context,
 				'start' => 2,
 				'path' => Debugger::trimPath($file)
-			);
+			];
 			return Debugger::getInstance()->outputError($data);
 		} else {
 			$message = $error . ' (' . $code . '): ' . $description . ' in [' . $file . ', line ' . $line . ']';
 			if (!empty($errorConfig['trace'])) {
-				$trace = Debugger::trace(array('start' => 1, 'format' => 'log'));
+				$trace = Debugger::trace(['start' => 1, 'format' => 'log']);
 				$message .= "\nTrace:\n" . $trace . "\n";
-				$message .= self::traceDetails();
+				$message .= static::traceDetails();
 			}
 			return CakeLog::write($log, $message);
 		}
@@ -105,10 +122,6 @@ class MyErrorHandler extends ErrorHandler {
 			return false;
 		}
 
-		if (Configure::read('debug')) {
-			return false;
-		}
-
 		if (ob_get_level()) {
 			ob_end_clean();
 		}
@@ -128,18 +141,22 @@ class MyErrorHandler extends ErrorHandler {
 	 */
 	public static function traceDetails() {
 		if (empty($_SERVER['REQUEST_URI']) || strpos($_SERVER['REQUEST_URI'], '/test.php?') === 0) {
-			return null;
+			return '';
 		}
+		if (!class_exists('Utility') || !class_exists('Router')) {
+			return '';
+		}
+
 		$currentUrl = Router::url(); //isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : 'n/a';
 		$refererUrl = Utility::getReferer(); //Router::getRequest()->url().'
 		$uid = (!empty($_SESSION) && !empty($_SESSION['Auth']['User']['id'])) ? $_SESSION['Auth']['User']['id'] : null;
 
-		$data = array(
-			@CakeRequest::clientIp(),
+		$data = [
+			Utility::getClientIp(),
 			$currentUrl . (!empty($refererUrl) ? (' (' . $refererUrl . ')') : ''),
 			$uid,
 			env('HTTP_USER_AGENT')
-		);
+		];
 		return implode(' - ', $data);
 	}
 

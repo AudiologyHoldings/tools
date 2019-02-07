@@ -2,51 +2,51 @@
 App::uses('ToolsAppModel', 'Tools.Model');
 App::uses('CommonComponent', 'Tools.Controller/Component');
 App::uses('Hash', 'Utility');
+App::uses('RandomLib', 'Tools.Lib');
 
 /**
  * A generic model to hold tokens
  *
  * @author Mark Scherer
- * @cakephp 2.x
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class Token extends ToolsAppModel {
 
 	public $displayField = 'key';
 
-	public $order = array('Token.created' => 'DESC');
+	public $order = ['created' => 'DESC'];
 
 	public $defaultLength = 22;
 
 	public $validity = MONTH;
 
-	public $validate = array(
-		'type' => array(
-			'notEmpty' => array(
-				'rule' => array('notEmpty'),
+	public $validate = [
+		'type' => [
+			'notBlank' => [
+				'rule' => ['notBlank'],
 				'message' => 'valErrMandatoryField',
-			),
-		),
-		'key' => array(
-			'notEmpty' => array(
-				'rule' => array('notEmpty'),
+			],
+		],
+		'key' => [
+			'notBlank' => [
+				'rule' => ['notBlank'],
 				'message' => 'valErrMandatoryField',
 				'last' => true,
-			),
-			'isUnique' => array(
-				'rule' => array('isUnique'),
+			],
+			'isUnique' => [
+				'rule' => ['isUnique'],
 				'message' => 'valErrTokenExists',
-			),
-		),
-		'content' => array(
-			'maxLength' => array(
-				'rule' => array('maxLength', 255),
-				'message' => array('valErrMaxCharacters %s', 255),
+			],
+		],
+		'content' => [
+			'maxLength' => [
+				'rule' => ['maxLength', 255],
+				'message' => ['valErrMaxCharacters %s', 255],
 				'allowEmpty' => true
-			),
-		),
-		'used' => array('numeric')
-	);
+			],
+		],
+		'used' => ['numeric']
+	];
 
 	/**
 	 * Stores new key in DB
@@ -70,12 +70,12 @@ class Token extends ToolsAppModel {
 			$keyLength = mb_strlen($key);
 		}
 
-		$data = array(
+		$data = [
 			'type' => $type,
 			'user_id' => (string)$uid,
 			'content' => (string)$content,
 			'key' => $key,
-		);
+		];
 
 		$this->set($data);
 		$max = 99;
@@ -107,7 +107,7 @@ class Token extends ToolsAppModel {
 		if (empty($type) || empty($key)) {
 			return false;
 		}
-		$options = array('conditions' => array($this->alias . '.key' => $key, $this->alias . '.type' => $type));
+		$options = ['conditions' => [$this->alias . '.key' => $key, $this->alias . '.type' => $type]];
 		if (!empty($uid)) {
 			$options['conditions'][$this->alias . '.user_id'] = $uid;
 		}
@@ -150,7 +150,7 @@ class Token extends ToolsAppModel {
 			return false;
 		}
 		//$this->id = $id;
-		if ($this->updateAll(array($this->alias . '.used' => $this->alias . '.used + 1', $this->alias . '.modified' => '"' . date(FORMAT_DB_DATETIME) . '"'), array($this->alias . '.id' => $id))) {
+		if ($this->updateAll([$this->alias . '.used' => $this->alias . '.used + 1', $this->alias . '.modified' => '"' . date(FORMAT_DB_DATETIME) . '"'], [$this->alias . '.id' => $id])) {
 			return true;
 		}
 		return false;
@@ -160,43 +160,60 @@ class Token extends ToolsAppModel {
 	 * Remove old/invalid keys
 	 * does not remove recently used ones (for proper feedback)!
 	 *
-	 * @return bool success
+	 * @return bool Success
 	 */
 	public function garbageCollector() {
-		$conditions = array(
+		$conditions = [
 			$this->alias . '.created <' => date(FORMAT_DB_DATETIME, time() - $this->validity),
-		);
+		];
 		return $this->deleteAll($conditions, false);
 	}
 
 	/**
 	 * Get admin stats
+	 *
+	 * @return array
 	 */
 	public function stats() {
-		$keys = array();
-		$keys['unused_valid'] = $this->find('count', array('conditions' => array($this->alias . '.used' => 0, $this->alias . '.created >=' => date(FORMAT_DB_DATETIME, time() - $this->validity))));
-		$keys['used_valid'] = $this->find('count', array('conditions' => array($this->alias . '.used' => 1, $this->alias . '.created >=' => date(FORMAT_DB_DATETIME, time() - $this->validity))));
+		$keys = [];
+		$keys['unused_valid'] = $this->find('count', ['conditions' => [$this->alias . '.used' => 0, $this->alias . '.created >=' => date(FORMAT_DB_DATETIME, time() - $this->validity)]]);
+		$keys['used_valid'] = $this->find('count', ['conditions' => [$this->alias . '.used' => 1, $this->alias . '.created >=' => date(FORMAT_DB_DATETIME, time() - $this->validity)]]);
 
-		$keys['unused_invalid'] = $this->find('count', array('conditions' => array($this->alias . '.used' => 0, $this->alias . '.created <' => date(FORMAT_DB_DATETIME, time() - $this->validity))));
-		$keys['used_invalid'] = $this->find('count', array('conditions' => array($this->alias . '.used' => 1, $this->alias . '.created <' => date(FORMAT_DB_DATETIME, time() - $this->validity))));
+		$keys['unused_invalid'] = $this->find('count', ['conditions' => [$this->alias . '.used' => 0, $this->alias . '.created <' => date(FORMAT_DB_DATETIME, time() - $this->validity)]]);
+		$keys['used_invalid'] = $this->find('count', ['conditions' => [$this->alias . '.used' => 1, $this->alias . '.created <' => date(FORMAT_DB_DATETIME, time() - $this->validity)]]);
 
-		$types = $this->find('all', array('conditions' => array(), 'fields' => array('DISTINCT type')));
-		$keys['types'] = !empty($types) ? Hash::extract('{n}.' . $this->alias . '.type', $types) : array();
+		$types = $this->find('all', ['conditions' => [], 'fields' => ['DISTINCT type']]);
+		$keys['types'] = !empty($types) ? Hash::extract('{n}.' . $this->alias . '.type', $types) : [];
 		return $keys;
 	}
 
 	/**
-	 * Generator
+	 * Generator of secure random tokens.
 	 *
-	 * @param length (defaults to defaultLength)
+	 * Note that it is best to use an even number for the length.
+	 *
+	 * @param int|null $length (defaults to defaultLength)
 	 * @return string Key
 	 */
 	public function generateKey($length = null) {
 		if (empty($length)) {
 			$length = $this->defaultLength;
 		}
-		App::uses('RandomLib', 'Tools.Lib');
-		return RandomLib::generatePassword($length);
+
+		if (version_compare(PHP_VERSION, '7.0.0') >= 0) {
+			$function = 'random_bytes';
+		} elseif (extension_loaded('openssl')) {
+			$function = 'openssl_random_pseudo_bytes';
+		} else {
+			trigger_error('Not secure', E_USER_DEPRECATED);
+			return RandomLib::generatePassword($length);
+		}
+
+		$value = bin2hex($function($length / 2));
+		if (strlen($value) !== $length) {
+			$value = str_pad($value, $length, '0');
+		}
+		return $value;
 	}
 
 }
