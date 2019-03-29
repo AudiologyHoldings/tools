@@ -32,7 +32,7 @@ class Horde_Text_Diff_Renderer_Sidebyside extends Horde_Text_Diff_Renderer {
 	}
 
 	protected function _startBlock($header) {
-		$h = split(",", $header);
+		$h = preg_split("/,/", $header);
 		echo '<tr class="diffheader"><td colspan="2">';
 		if ($h[1] == 1)
 			echo "Line:&nbsp;" . $h[0];

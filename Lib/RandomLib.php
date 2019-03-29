@@ -202,7 +202,7 @@ class RandomLib {
 		$resultsentences = [];
 
 		for ($i = 0; $i < count($sentences); $i++) {
-			$words = split(' ', trim($sentences[$i]));
+			$words = preg_split('/ /', trim($sentences[$i]));
 
 			for ($k = 0; $k < count($words) - $wordscount; $k++) {
 				$prefix = trim(implode(' ', array_slice($words, $k, $wordscount)));
@@ -215,7 +215,7 @@ class RandomLib {
 
 					for ($j = $i + 1; $j < count($sentences); $j++) {
 						if (preg_match('/' . ereg_replace('/', '\/', preg_quote($prefix)) . '(.*)$/', $sentences[$j], $m)) {
-							$w = split(' ', trim($m[1]));
+							$w = preg_split('/ /', trim($m[1]));
 
 							if (count($w) > 0 && trim($w[0]) !== '') {
 								array_push($hash[$prefix], trim($w[0]));
@@ -237,8 +237,8 @@ class RandomLib {
 
 		for ($i = 0; $i < count($sentences); $i++) {
 			$p = $stpr[rand(0, count($stpr) - 1)];
-			$sent = split(' ', $p);
-			$cc = count(split(' ', $sentences[$i]));
+			$sent = preg_split('/ /', $p);
+			$cc = count(preg_split('/ /', $sentences[$i]));
 
 			$j = 0;
 
