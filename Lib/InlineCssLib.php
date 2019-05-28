@@ -9,7 +9,7 @@
  *
  * @author Mark Scherer
  * @copyright Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class InlineCssLib {
 
@@ -22,22 +22,25 @@ class InlineCssLib {
 	 *
 	 * @var array
 	 */
-	protected $_defaults = array(
+	protected $_defaults = [
 		'engine' => self::ENGINE_EMOGRIFIER,
 		'cleanup' => true,
+		'responsive' => false, // If classes/ids should not be remove, only relevant for cleanup=>true
 		'useInlineStylesBlock' => true,
 		'debug' => false, // only cssToInline
 		'xhtmlOutput' => false, // only cssToInline
 		'removeCss' => true, // only cssToInline
 		'correctUtf8' => false // only cssToInline
-	);
+	];
 
-	public $config = array();
+	public $config = [];
 
 	/**
 	 * Inits with auto merged config.
+	 *
+	 * @param array $config
 	 */
-	public function __construct($config = array()) {
+	public function __construct($config = []) {
 		$defaults = (array)Configure::read('InlineCss') + $this->_defaults;
 		$this->config = $config + $defaults;
 		if (!method_exists($this, '_process' . ucfirst($this->config['engine']))) {
@@ -48,10 +51,13 @@ class InlineCssLib {
 	/**
 	 * Processes HTML and CSS.
 	 *
+	 * @param string $html
+	 * @param string|null $css
 	 * @return string Result
 	 */
 	public function process($html, $css = null) {
-		if (($html = trim($html)) === '') {
+		$html = trim($html);
+		if ($html === '') {
 			return $html;
 		}
 		$method = '_process' . ucfirst($this->config['engine']);
@@ -59,25 +65,37 @@ class InlineCssLib {
 	}
 
 	/**
+	 * @param string $html
+	 * @param string $css
 	 * @return string Result
 	 */
 	protected function _processEmogrifier($html, $css) {
-		//$css .= $this->_extractAndRemoveCss($html);
-		App::import('Vendor', 'Tools.Emogrifier', array('file' => 'Emogrifier/Emogrifier.php'));
+		if (class_exists('\Pelago\Emogrifier')) {
+			$Emogrifier = new \Pelago\Emogrifier($html, $css);
+		} else {
+			App::import('Vendor', 'Tools.Emogrifier', ['file' => 'Emogrifier/Emogrifier.php']);
+			$Emogrifier = new Emogrifier($html, $css);
+		}
 
-		$Emogrifier = new Emogrifier($html, $css);
-		//$Emogrifier->preserveEncoding = true;
+		if (method_exists($Emogrifier, 'enableCssToHtmlMapping')) {
+			$Emogrifier->enableCssToHtmlMapping();
+		}
+		if (method_exists($Emogrifier, 'disableInvisibleNodeRemoval')) {
+			$Emogrifier->disableInvisibleNodeRemoval();
+		}
 
-		$result = $Emogrifier->emogrify();
+		$result = @$Emogrifier->emogrify();
 
 		if ($this->config['cleanup']) {
 			// Remove comments and whitespace
-			$result = preg_replace( '/<!--(.|\s)*?-->/', '', $result);
-			$result = preg_replace( '/\s\s+/', '', $result);
+			$result = preg_replace('/<!--(.|\s)*?-->/', '', $result);
+			//$result = preg_replace( '/\s\s+/', '\s', $result);
 
 			// Result classes and ids
-			$result = preg_replace('/\bclass="[^"]*"/', '', $result);
-			$result = preg_replace('/\bid="[^"]*"/', '', $result);
+			if (!$this->config['responsive']) {
+				$result = preg_replace('/\bclass="[^"]*"/', '', $result);
+				$result = preg_replace('/\bid="[^"]*"/', '', $result);
+			}
 		}
 		return $result;
 	}
@@ -86,10 +104,12 @@ class InlineCssLib {
 	 * Process css blocks to inline css
 	 * Also works for html snippets (without <html>)
 	 *
+	 * @param string $html
+	 * @param string $css
 	 * @return string HTML output
 	 */
 	protected function _processCssToInline($html, $css) {
-		App::import('Vendor', 'Tools.CssToInlineStyles', array('file' => 'CssToInlineStyles' . DS . 'CssToInlineStyles.php'));
+		App::import('Vendor', 'Tools.CssToInlineStyles', ['file' => 'CssToInlineStyles' . DS . 'CssToInlineStyles.php']);
 
 		//fix issue with <html> being added
 		$separator = '~~~~~~~~~~~~~~~~~~~~';
@@ -116,9 +136,7 @@ class InlineCssLib {
 		}
 		$html = $CssToInlineStyles->convert($this->config['xhtmlOutput']);
 		if ($this->config['removeCss']) {
-			//$html = preg_replace('/\<style(.*)\>(.*)\<\/style\>/i', '', $html);
-			$html = $this->stripOnly($html, array('style', 'script'), true);
-			//CakeLog::write('css', $html);
+			$html = $this->stripOnly($html, ['style', 'script'], true);
 		}
 
 		if (!empty($incomplete)) {
@@ -133,19 +151,22 @@ class InlineCssLib {
 	 * Some reverse function of strip_tags with blacklisting instead of whitelisting
 	 * //maybe move to Tools.Utility/String/Text?
 	 *
-	 * @return string cleanedStr
+	 * @param string $str
+	 * @param array|string $tags
+	 * @param bool $stripContent
+	 * @return string Cleaned string
 	 */
 	public function stripOnly($str, $tags, $stripContent = false) {
 		$content = '';
 		if (!is_array($tags)) {
-			$tags = (strpos($str, '>') !== false ? explode('>', str_replace('<', '', $tags)) : array($tags));
+			$tags = (strpos($str, '>') !== false ? explode('>', str_replace('<', '', $tags)) : [$tags]);
 			if (end($tags) === '') {
 				array_pop($tags);
 			}
 		}
 		foreach ($tags as $tag) {
 			if ($stripContent) {
-				 $content = '(.+</' . $tag . '[^>]*>|)';
+				$content = '(.+</' . $tag . '[^>]*>|)';
 			}
 			$str = preg_replace('#</?' . $tag . '[^>]*>' . $content . '#is', '', $str);
 		}
@@ -156,23 +177,23 @@ class InlineCssLib {
 	 * _extractAndRemoveCss - extracts any CSS from the rendered view and
 	 * removes it from the $html
 	 *
+	 * @param string $html
 	 * @return string
 	 */
 	protected function _extractAndRemoveCss($html) {
 		$css = null;
 
-		$DOM = new DOMDocument;
+		$DOM = new DOMDocument();
 		$DOM->loadHTML($html);
 
 		// DOM removal queue
-		$removeDoms = array();
+		$removeDoms = [];
 
 		// catch <link> style sheet content
 		$links = $DOM->getElementsByTagName('link');
 
 		foreach ($links as $link) {
-			if ($link->hasAttribute('href') && preg_match("/\.css$/i", $link->getAttribute('href'))) {
-
+			if ($link->hasAttribute('href') && preg_match("/\\.css$/i", $link->getAttribute('href'))) {
 				// find the css file and load contents
 				if ($link->hasAttribute('media')) {
 					// FOR NOW
@@ -190,7 +211,7 @@ class InlineCssLib {
 			}
 		}
 
-		// Catch embeded <style> and @import CSS content
+		// Catch embedded <style> and @import CSS content
 		$styles = $DOM->getElementsByTagName('style');
 
 		// Style
@@ -213,7 +234,8 @@ class InlineCssLib {
 			foreach ($removeDoms as $removeDom) {
 				try {
 					$removeDom->parentNode->removeChild($removeDom);
-				} catch (DOMException $e) {}
+				} catch (DOMException $e) {
+				}
 			}
 			$html = $DOM->saveHTML();
 		}
@@ -231,10 +253,10 @@ class InlineCssLib {
 		$cssFilenames = array_merge($this->_globRecursive(CSS . '*.Css'), $this->_globRecursive(CSS . '*.CSS'), $this->_globRecursive(CSS . '*.css'));
 
 		// Build an array of the ever more path specific $cssHref location
-		$cssHref = str_replace(array('\\', '/'), '/', $cssHref);
+		$cssHref = str_replace(['\\', '/'], '/', $cssHref);
 
 		$cssHrefs = explode(DS, $cssHref);
-		$cssHrefPaths = array();
+		$cssHrefPaths = [];
 		for ($i = count($cssHrefs) - 1; $i > 0; $i--) {
 			if (isset($cssHrefPaths[count($cssHrefPaths) - 1])) {
 				$cssHrefPaths[] = $cssHrefs[$i] . DS . $cssHrefPaths[count($cssHrefPaths) - 1];
@@ -260,7 +282,9 @@ class InlineCssLib {
 
 		$css = null;
 		if (!empty($bestCssFilename) && is_file($bestCssFilename)) {
-			$css = file_get_contents($bestCssFilename);
+			$context = stream_context_create(
+				['http' => ['header' => 'Connection: close']]);
+			$css = file_get_contents($bestCssFilename, 0, $context);
 		}
 
 		return $css;
@@ -274,7 +298,6 @@ class InlineCssLib {
 	 * @return array
 	 */
 	protected function _globRecursive($pattern, $flags = 0) {
-
 		$files = glob($pattern, $flags);
 
 		foreach (glob(dirname($pattern) . '/*', GLOB_ONLYDIR | GLOB_NOSORT) as $dir) {
@@ -287,7 +310,7 @@ class InlineCssLib {
 	/**
 	 * _parseInlineCssAndLoadImports
 	 *
-	 * @param string Input
+	 * @param string $css Input
 	 * @return string Result
 	 */
 	protected function _parseInlineCssAndLoadImports($css) {
@@ -298,11 +321,11 @@ class InlineCssLib {
 			// First remove the @imports
 			$css = preg_replace("/\@import.*?url\(.*?\).*?;/i", '', $css);
 
+			$context = stream_context_create(
+				['http' => ['header' => 'Connection: close']]);
 			foreach ($matches[1] as $url) {
 				if (preg_match("/^http/i", $url)) {
-					if ($this->importExternalCss) {
-						$css .= file_get_contents($url);
-					}
+					$css .= file_get_contents($url, 0, $context);
 				} else {
 					$css .= $this->_findAndLoadCssFile($url);
 				}

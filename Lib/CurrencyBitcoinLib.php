@@ -5,20 +5,20 @@ App::uses('HttpSocketLib', 'Tools.Lib');
  * Use Webservices to get current rates etc
  *
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class CurrencyBitcoinLib {
 
-	public $settings = array(
+	public $settings = [
 		'currency' => 'EUR', # set to NULL or empty for all
 		'api' => 'bitmarket', # bitmarket or bitcoincharts
-	);
+	];
 
 	/**
 	 * @see https://bitmarket.eu/api
 	 */
-	public function bitmarket($options = array()) {
-		$options = array_merge($this->settings, $options);
+	public function bitmarket($options = []) {
+		$options += $this->settings;
 		$url = 'https://bitmarket.eu/api/ticker';
 		$res = $this->_getBitmarket($url);
 
@@ -39,14 +39,14 @@ class CurrencyBitcoinLib {
 	 *
 	 * @see http://bitcoincharts.com/about/markets-api/
 	 */
-	public function bitcoincharts($options = array()) {
-		$options = array_merge($this->settings, $options);
+	public function bitcoincharts($options = []) {
+		$options += $this->settings;
 		$url = 'http://bitcoincharts.com/t/markets.json';
 		$res = $this->_getBitcoincharts($url);
 		if (!$res) {
 			return false;
 		}
-		$array = array();
+		$array = [];
 		foreach ($res as $val) {
 			$array[$val['currency']] = $val;
 			unset($array[$val['currency']]['currency']);
@@ -66,8 +66,8 @@ class CurrencyBitcoinLib {
 	 * - currency
 	 * - api
 	 */
-	public function rate($options = array()) {
-		$options = array_merge($this->settings, $options);
+	public function rate($options = []) {
+		$options += $this->settings;
 		$res = $this->{$options['api']}($options);
 
 		if ($res && isset($res['sell'])) {

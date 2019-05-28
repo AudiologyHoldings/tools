@@ -9,9 +9,8 @@ App::uses('AppShell', 'Console/Command');
 /**
  * Reset user data
  *
- * @cakephp 2.x
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class ResetShell extends AppShell {
 
@@ -35,7 +34,7 @@ class ResetShell extends AppShell {
 		$this->out('Email:');
 		App::uses('Validation', 'Utility');
 		while (empty($email) || !Validation::email($email)) {
-			$email = $this->in(__('New email address (must have a valid form at least)'));
+			$email = $this->in('New email address (must have a valid form at least)');
 		}
 
 		$this->User = ClassRegistry::init(CLASS_USER);
@@ -45,9 +44,7 @@ class ResetShell extends AppShell {
 
 		$this->hr();
 		$this->out('resetting...');
-		Configure::write('debug', 2);
-		$this->User->recursive = -1;
-		$this->User->updateAll(array('User.email' => '\'' . $email . '\''), array('User.email !=' => $email));
+		$this->User->updateAll(['User.email' => '\'' . $email . '\''], ['User.email !=' => $email]);
 		$count = $this->User->getAffectedRows();
 		$this->out($count . ' emails resetted - DONE');
 	}
@@ -58,7 +55,7 @@ class ResetShell extends AppShell {
 	 * @return void
 	 */
 	public function pwd() {
-		$components = array('Tools.AuthExt', 'Auth');
+		$components = ['Tools.AuthExt', 'Auth'];
 		foreach ($components as $component) {
 			if (App::import('Component', $component)) {
 				$component .= 'Component';
@@ -77,7 +74,7 @@ class ResetShell extends AppShell {
 			$pwToHash = $this->args[0];
 		}
 		while (empty($pwToHash) || mb_strlen($pwToHash) < 2) {
-			$pwToHash = $this->in(__('Password to Hash (2 characters at least)'));
+			$pwToHash = $this->in('Password to Hash (2 characters at least)');
 		}
 		$this->hr();
 		$this->out('Password:');
@@ -105,8 +102,7 @@ class ResetShell extends AppShell {
 		}
 
 		$newPwd = '\'' . $pw . '\'';
-		$this->User->recursive = -1;
-		$this->User->updateAll(array('password' => $newPwd), array('password !=' => $pw));
+		$this->User->updateAll(['password' => $newPwd], ['password !=' => $pw]);
 		$count = $this->User->getAffectedRows();
 		$this->out($count . ' pwds resetted - DONE');
 	}

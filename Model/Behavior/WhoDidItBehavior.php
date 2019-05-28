@@ -5,12 +5,12 @@
  * @copyright http://www.4webby.com
  * @author Daniel Vecchiato
  * @author Mark Scherer
- * @author Marc Würth
+ * @author Marc WÃ¼rth
  * @version 1.3
- * @license MIT License (http://www.opensource.org/licenses/mit-license.php)
- * @link https://github.com/dereuromark/tools
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 
+App::uses('AuthComponent', 'Controller/Component');
 App::uses('CakeSession', 'Model/Datasource');
 App::uses('ModelBehavior', 'Model');
 
@@ -36,7 +36,7 @@ class WhoDidItBehavior extends ModelBehavior {
 	 * @var array
 	 * @link http://book.cakephp.org/2.0/en/models/saving-your-data.html#using-created-and-modified
 	 */
-	protected $_defaultConfig = array(
+	protected $_defaultConfig = [
 		'auth_session' => 'Auth', // Name of Auth session key
 		'user_model' => 'User', // Name of the User model (for plugins use PluginName.ModelName)
 		'created_by_field' => 'created_by', // Name of the "created_by" field in the model
@@ -44,7 +44,7 @@ class WhoDidItBehavior extends ModelBehavior {
 		'confirmed_by_field' => 'confirmed_by', // Name of the "confirmed by" field in the model
 		'auto_bind' => true, // Automatically bind the model to the User model (default true)
 		'force_modified' => false // Force update of the "modified" field even if not empty
-	);
+	];
 
 	/**
 	 * Initiate WhoDidIt Behavior.
@@ -56,7 +56,7 @@ class WhoDidItBehavior extends ModelBehavior {
 	 * @param array $config Behavior settings you would like to override.
 	 * @return void
 	 */
-	public function setup(Model $Model, $config = array()) {
+	public function setup(Model $Model, $config = []) {
 		$config += $this->_defaultConfig;
 
 		$config['has_created_by'] = $Model->hasField($config['created_by_field']);
@@ -66,27 +66,48 @@ class WhoDidItBehavior extends ModelBehavior {
 		// Handles model binding to the User model according to the auto_bind settings (default true).
 		if ($config['auto_bind']) {
 			if ($config['has_created_by']) {
-				$commonBelongsTo = array(
-					'CreatedBy' => array(
-						'className' => $config['user_model'],
-						'foreignKey' => $config['created_by_field']));
-				$Model->bindModel(array('belongsTo' => $commonBelongsTo), false);
+				$createdByOptions = [
+					'className' => $config['user_model'],
+					'foreignKey' => $config['created_by_field'],
+				];
+				if (method_exists($Model, 'belongsTo')) {
+					$Model->belongsTo('CreatedBy', $createdByOptions);
+				} else {
+					$commonBelongsTo = [
+						'CreatedBy' => $createdByOptions,
+					];
+					$Model->bindModel(['belongsTo' => $commonBelongsTo], false);
+				}
 			}
 
 			if ($config['has_modified_by']) {
-				$commonBelongsTo = array(
-					'ModifiedBy' => array(
-						'className' => $config['user_model'],
-						'foreignKey' => $config['modified_by_field']));
-				$Model->bindModel(array('belongsTo' => $commonBelongsTo), false);
+				$modifiedByOptions = [
+					'className' => $config['user_model'],
+					'foreignKey' => $config['modified_by_field'],
+				];
+				if (method_exists($Model, 'belongsTo')) {
+					$Model->belongsTo('ModifiedBy', $modifiedByOptions);
+				} else {
+					$commonBelongsTo = [
+						'ModifiedBy' => $modifiedByOptions,
+					];
+					$Model->bindModel(['belongsTo' => $commonBelongsTo], false);
+				}
 			}
 
 			if ($config['has_confirmed_by']) {
-				$commonBelongsTo = array(
-					'ConfirmedBy' => array(
-						'className' => $config['user_model'],
-						'foreignKey' => $config['confirmed_by_field']));
-				$Model->bindModel(array('belongsTo' => $commonBelongsTo), false);
+				$confirmedByOptions = [
+					'className' => $config['user_model'],
+					'foreignKey' => $config['confirmed_by_field'],
+				];
+				if (method_exists($Model, 'belongsTo')) {
+					$Model->belongsTo('ConfirmedBy', $confirmedByOptions);
+				} else {
+					$commonBelongsTo = [
+						'ConfirmedBy' => $confirmedByOptions,
+					];
+					$Model->bindModel(['belongsTo' => $commonBelongsTo], false);
+				}
 			}
 		}
 
@@ -103,25 +124,30 @@ class WhoDidItBehavior extends ModelBehavior {
 	 * ... the modified by field only if it is not in the data array
 	 * or the "force_modified" setting is set to true.
 	 *
-	 * @param Model $Model The model using this behavior.
-	 * @return bool True
+	 * @param Model $Model The Model using this behavior
+	 * @param array $options Options passed from Model::save(), unused.
+	 * @return mixed False if the operation should abort. Any other result will continue.
+	 * @SuppressWarnings(PHPMD.UnusedFormalParameter)
 	 */
-	public function beforeSave(Model $Model, $options = array()) {
+	public function beforeSave(Model $Model, $options = []) {
 		$config = $this->settings[$Model->alias];
 		if (!$config['has_created_by'] && !$config['has_modified_by']) {
 			return true;
 		}
 
 		$authSession = $config['auth_session'];
-		list($plugin, $userSession) = pluginSplit($config['user_model']);
+		list(, $userSession) = pluginSplit($config['user_model']);
 
-		$userId = CakeSession::read($authSession . '.' . $userSession . '.id');
+		$userId = AuthComponent::user('id');
+		if (empty($userId)) {
+			$userId = CakeSession::read($authSession . '.' . $userSession . '.id');
+		}
 
 		if (!$userId) {
 			return true;
 		}
 
-		$data = array();
+		$data = [];
 		$modifiedByField = $config['modified_by_field'];
 
 		if (!isset($Model->data[$Model->alias][$modifiedByField]) || $config['force_modified']) {
@@ -132,7 +158,7 @@ class WhoDidItBehavior extends ModelBehavior {
 			$data[$field] = false;
 		}
 
-		if (!$Model->exists()) {
+		if (!$Model->exists($Model->getID())) {
 			$data[$config['created_by_field']] = $userId;
 		}
 		if ($data) {

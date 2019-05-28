@@ -6,9 +6,9 @@ class HashShell extends AppShell {
 
 	const DEFAULT_HASH_ALG = 4; # sha1
 
-	public $active = array('md5', 'sha1', 'sha256', 'sha512');
+	public $active = ['md5', 'sha1', 'sha256', 'sha512'];
 
-	public $tasks = array();
+	public $tasks = [];
 
 	/**
 	 * Override main() for help message hook
@@ -23,12 +23,12 @@ class HashShell extends AppShell {
 		$this->out('Hash Strings...');
 		$hashAlgos = hash_algos();
 
-		$types = array_merge(array_keys($hashAlgos), array('q'));
+		$types = array_merge(array_keys($hashAlgos), ['q']);
 		foreach ($hashAlgos as $key => $t) {
 			$this->out(($key + 1) . ': ' . $t . (in_array($t, $this->active) ? ' (!)' : ''));
 		}
 		while (!isset($type) || !in_array($type - 1, $types)) {
-			$type = $this->in(__('Select hashType - or [q] to quit'), null, self::DEFAULT_HASH_ALG);
+			$type = $this->in('Select hashType - or [q] to quit', null, static::DEFAULT_HASH_ALG);
 			if ($type === 'q') {
 				return $this->error('Aborted!');
 			}
@@ -36,7 +36,7 @@ class HashShell extends AppShell {
 		$type--;
 
 		while (empty($pwToHash) || mb_strlen($pwToHash) < 2) {
-			$pwToHash = $this->in(__('String to Hash (2 characters at least)'));
+			$pwToHash = $this->in('String to Hash (2 characters at least)');
 		}
 
 		$pw = $this->_hash($hashAlgos[$type], $pwToHash);
@@ -75,7 +75,7 @@ class HashShell extends AppShell {
 		}
 		echo strlen($data) . ' bytes of random data built !' . PHP_EOL . PHP_EOL . 'Testing hash algorithms ...' . PHP_EOL;
 
-		$results = array();
+		$results = [];
 		foreach (hash_algos() as $v) {
 			echo $v . PHP_EOL;
 
@@ -95,8 +95,8 @@ class HashShell extends AppShell {
 
 		$i = 1;
 		foreach ($results as $k => $v) {
-		foreach ($v as $k1 => $v1) {
-		echo ' ' . str_pad($i++ . '.', 4, ' ', STR_PAD_LEFT) . '  ' . str_pad($v1, 30, ' ') . ($k / 1000000) . ' ms' . PHP_EOL;
+			foreach ($v as $k1 => $v1) {
+				echo ' ' . str_pad($i++ . '.', 4, ' ', STR_PAD_LEFT) . '  ' . str_pad($v1, 30, ' ') . ($k / 1000000) . ' ms' . PHP_EOL;
 			}
 		}
 	}
@@ -112,26 +112,26 @@ class HashShell extends AppShell {
 	public function getOptionParser() {
 		$parser = parent::getOptionParser();
 
-		$parser->description(__('A console tool for hashing strings'))
-			->addSubcommand('string', array(
-				'help' => __('Hash a string'),
-				'parser' => array(
-					'description' => __('hash'),
-				)
-			))->addSubcommand('compare', array(
-				'help' => __('Compare algs'),
-				'parser' => array(
-					'description' => __('Compare algs'),
-				)
-			))->addSubcommand('time', array(
-				'help' => __('Measure alg times'),
-				'parser' => array(
-					'description' => __('Measure alg times'),
-				)
-			))->epilog(
-				array(
-					__('sha1 is the default algorithm')
-				)
+		$parser->description('A console tool for hashing strings')
+			->addSubcommand('string', [
+				'help' => 'Hash a string',
+				'parser' => [
+					'description' => 'hash',
+				]
+			])->addSubcommand('compare', [
+				'help' => 'Compare algs',
+				'parser' => [
+					'description' => 'Compare algs',
+				]
+			])->addSubcommand('time', [
+				'help' => 'Measure alg times',
+				'parser' => [
+					'description' => 'Measure alg times',
+				]
+			])->epilog(
+				[
+					'sha1 is the default algorithm'
+				]
 			);
 		return $parser;
 	}

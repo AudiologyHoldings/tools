@@ -18,9 +18,7 @@ App::uses('AppShell', 'Console/Command');
  * - PRIMARY_KEY Indexes for primary keys ("id")
  *
  * @author Mark Scherer
- * @link
- * @license http://www.opensource.org/licenses/mit-license.php The MIT License
- * @cakephp 2.x
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class IndexShell extends AppShell {
 
@@ -29,16 +27,16 @@ class IndexShell extends AppShell {
 	 *
 	 * @var array
 	 */
-	public $settings = array(
+	public $settings = [
 		'ds' => 'default',
-	);
+	];
 
 	/**
 	 * The Stack of sql queries to run as an array
 	 *
 	 * @var array
 	 */
-	protected $_script = array();
+	protected $_script = [];
 
 	/**
 	 * Startup method
@@ -60,14 +58,7 @@ class IndexShell extends AppShell {
 	 */
 	public function initialize() {
 		parent::initialize();
-		/*
-		if (file_exists(APP . 'Config' . DS . 'index.php')) {
-			include(APP . 'Config' . DS . 'index.php');
-			if (!empty($config)) {
-				$this->settings = array_merge($this->settings, $config);
-			}
-		}
-		*/
+
 		$this->_loadModels();
 	}
 
@@ -93,7 +84,7 @@ class IndexShell extends AppShell {
 	 * @param array $sources array()
 	 * @return void
 	 */
-	protected function _buildScript($sources = array()) {
+	protected function _buildScript($sources = []) {
 		foreach ($sources as $ds) {
 			$this->_buildScriptForDataSource($ds);
 		}
@@ -115,17 +106,17 @@ class IndexShell extends AppShell {
 
 		$doneSomething = false;
 		foreach ($tables as $table) {
-			if (in_array($table, array('i18n'))) {
+			if (in_array($table, ['i18n'])) {
 				continue;
 			}
 
 			$model = Inflector::classify($table);
-			$Inst = ClassRegistry::init(array(
+			$Inst = ClassRegistry::init([
 				'class' => $model,
 				'table' => $table,
 				'ds' => $ds
-			));
-			if (!is_callable(array($Inst, 'schema'))) {
+			]);
+			if (!is_callable([$Inst, 'schema'])) {
 				continue;
 			}
 			$fields = $Inst->schema();
@@ -165,19 +156,19 @@ class IndexShell extends AppShell {
 
 	protected function _tables($useDbConfig = 'default') {
 		if (!$useDbConfig) {
-			return array();
+			return [];
 		}
 		require_once CONFIGS . 'database.php';
 		$connections = get_class_vars('DATABASE_CONFIG');
 		if (!isset($connections[$useDbConfig])) {
-			return array();
+			return [];
 		}
 		$db = ConnectionManager::getDataSource($useDbConfig);
 		if (!$db) {
-			return array();
+			return [];
 		}
 		$usePrefix = empty($db->config['prefix']) ? '' : $db->config['prefix'];
-		$tables = array();
+		$tables = [];
 		if ($usePrefix) {
 			foreach ($db->listSources() as $table) {
 				if (!strncmp($table, $usePrefix, strlen($usePrefix))) {
@@ -217,7 +208,7 @@ class IndexShell extends AppShell {
 		if (empty($this->params['interactive'])) {
 			$continue = 'Y';
 		} else {
-			$continue = strtoupper($this->in(__('Run this statement?'), array('Y', 'N', 'A', 'Q')));
+			$continue = strtoupper($this->in('Run this statement?', ['Y', 'N', 'A', 'Q']));
 			switch ($continue) {
 				case 'Q':
 					return $this->_stop();
@@ -254,37 +245,37 @@ class IndexShell extends AppShell {
 	}
 
 	public function getOptionParser() {
-		$subcommandParser = array(
-			'options' => array(
-				'dry-run' => array(
+		$subcommandParser = [
+			'options' => [
+				'dry-run' => [
 					'short' => 'd',
-					'help' => __d('cake_console', 'Dry run the update, no files will actually be modified.'),
+					'help' => 'Dry run the update, no files will actually be modified.',
 					'boolean' => true
-				),
-				'log' => array(
+				],
+				'log' => [
 					'short' => 'l',
-					'help' => __d('cake_console', 'Log all ouput to file log.txt in TMP dir'),
+					'help' => 'Log all ouput to file log.txt in TMP dir',
 					'boolean' => true
-				),
-				'interactive' => array(
+				],
+				'interactive' => [
 					'short' => 'i',
-					'help' => __d('cake_console', 'Interactive'),
+					'help' => 'Interactive',
 					'boolean' => true
-				),
-				'ds' => array(
+				],
+				'ds' => [
 					'short' => 'c',
-					'help' => __d('cake_console', 'custom ds'),
+					'help' => 'Custom ds',
 					'boolean' => true
-				)
-			)
-		);
+				]
+			]
+		];
 
 		return parent::getOptionParser()
-			->description(__d('cake_console', "..."))
-			->addSubcommand('run', array(
-				'help' => __d('cake_console', 'Run'),
+			->description("...")
+			->addSubcommand('run', [
+				'help' => 'Run',
 				'parser' => $subcommandParser
-			));
+			]);
 	}
 
 }

@@ -5,9 +5,8 @@ App::uses('ComponentCollection', 'Controller');
 /**
  * Password hashing and output
  *
- * @cakephp 2.x
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class PwdShell extends AppShell {
 
@@ -17,7 +16,7 @@ class PwdShell extends AppShell {
 	 * @return void
 	 */
 	public function hash() {
-		$components = array('Tools.AuthExt', 'Auth');
+		$components = ['Tools.AuthExt', 'Auth'];
 
 		$class = null;
 		foreach ($components as $component) {
@@ -28,13 +27,13 @@ class PwdShell extends AppShell {
 			}
 		}
 		if (!$class || !method_exists($class, 'password')) {
-			return $this->error(__('No Auth Component found'));
+			return $this->error('No Auth Component found');
 		}
 
 		$this->out('Using: ' . $class);
 
 		while (empty($pwToHash) || mb_strlen($pwToHash) < 2) {
-			$pwToHash = $this->in(__('Password to Hash (2 characters at least)'));
+			$pwToHash = $this->in('Password to Hash (2 characters at least)');
 		}
 
 		if ($authType = Configure::read('Passwordable.authType')) {

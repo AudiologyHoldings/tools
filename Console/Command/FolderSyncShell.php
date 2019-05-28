@@ -8,9 +8,8 @@ App::uses('AppShell', 'Console/Command');
  * You can also remove files in a if they are not longer existent in b
  *
  * @version 1.0
- * @cakephp 2.x
  * @author Mark Scherer
- * @license MIT
+ * @license http://opensource.org/licenses/mit-license.php MIT
  */
 class FolderSyncShell extends AppShell {
 
@@ -20,13 +19,13 @@ class FolderSyncShell extends AppShell {
 
 	public $files = 0;
 
-	public $missing = array();
+	public $missing = [];
 
 	public $updatedFiles = 0;
 
 	public $removedFiles = 0;
 
-	public $excludes = array('.git', '.svn');
+	public $excludes = ['.git', '.svn'];
 
 	/**
 	 * Main
@@ -76,11 +75,11 @@ class FolderSyncShell extends AppShell {
 		$excludes = $this->excludes;
 		$this->_sync($this->sourceFolder, $this->targetFolder, $excludes);
 
-		$this->out(__('Files: %s', $this->files));
+		$this->out(sprintf('Files: %s', $this->files));
 		$this->out();
 
 		if (!empty($this->missing)) {
-			$this->out(__('%s missing files', count($this->missing)));
+			$this->out(sprintf('%s missing files', count($this->missing)));
 			foreach ($this->missing as $missing) {
 				$this->out('- ' . $missing, 1, Shell::VERBOSE);
 			}
@@ -88,17 +87,17 @@ class FolderSyncShell extends AppShell {
 		}
 
 		if ($this->updatedFiles) {
-			$this->out(__('%s target files updated', $this->updatedFiles));
+			$this->out(sprintf('%s target files updated', $this->updatedFiles));
 		}
 		if ($this->removedFiles) {
-			$this->out(__('%s source files removed', $this->removedFiles));
+			$this->out(sprintf('%s source files removed', $this->removedFiles));
 		}
 		if (!$this->updatedFiles && !$this->removedFiles) {
 			$this->out('(nothing to do)');
 		}
 	}
 
-	protected function _sync($from, $to, $excludes = array()) {
+	protected function _sync($from, $to, $excludes = []) {
 		$Folder = new Folder($to);
 		$content = $Folder->read(true, true, true);
 		foreach ($content[0] as $folder) {
@@ -153,9 +152,9 @@ class FolderSyncShell extends AppShell {
 	}
 
 	public function help() {
-		$head = __("Usage: cake FolderSync <command>") . "\n";
+		$head = 'Usage: cake FolderSync <command>' . "\n";
 		$head .= "-----------------------------------------------\n";
-		$head .= __("Commands:") . "\n\n";
+		$head .= 'Commands:' . "\n\n";
 
 		$head .= "\t" . 'update' . "\n\n";
 		//$head .= "\t" . 'update' . "\n\n";
@@ -164,52 +163,52 @@ class FolderSyncShell extends AppShell {
 	}
 
 	public function getOptionParser() {
-		$subcommandParser = array(
-			'options' => array(
-				'source' => array(
+		$subcommandParser = [
+			'options' => [
+				'source' => [
 					'short' => 's',
-					'help' => __d('cake_console', 'source - defaults to app'),
+					'help' => 'source - defaults to app',
 					'default' => '',
-				),
-				'target' => array(
+				],
+				'target' => [
 					'short' => 't',
-					'help' => __d('cake_console', 'target - required'),
+					'help' => 'target - required',
 					'default' => '',
-				),
-				'plugin' => array(
+				],
+				'plugin' => [
 					'short' => 'p',
-					'help' => __d('cake_console', 'The plugin folder - can only be used with app as source'),
+					'help' => 'The plugin folder - can only be used with app as source',
 					'default' => '',
-				),
-				'remove' => array(
+				],
+				'remove' => [
 					'short' => 'r',
-					'help' => __d('cake_console', 'Remove files if source is non-existent'),
+					'help' => 'Remove files if source is non-existent',
 					'boolean' => true
-				),
-				'invert' => array(
+				],
+				'invert' => [
 					'short' => 'i',
-					'help' => __d('cake_console', 'Invert direction (target to source)'),
+					'help' => 'Invert direction (target to source)',
 					'boolean' => true
-				),
-				'dry-run' => array(
+				],
+				'dry-run' => [
 					'short' => 'd',
-					'help' => __d('cake_console', 'Dry run the update, no files will actually be modified.'),
+					'help' => 'Dry run the update, no files will actually be modified.',
 					'boolean' => true
-				),
-				'log' => array(
+				],
+				'log' => [
 					'short' => 'l',
-					'help' => __d('cake_console', 'Log all ouput to file log.txt in TMP dir'),
+					'help' => 'Log all ouput to file log.txt in TMP dir',
 					'boolean' => true
-				),
-			)
-		);
+				],
+			]
+		];
 
 		return parent::getOptionParser()
-			->description(__d('cake_console', "..."))
-			->addSubcommand('update', array(
-				'help' => __d('cake_console', 'Update'),
+			->description('Sync folders via CakePHP shell')
+			->addSubcommand('update', [
+				'help' => 'Update',
 				'parser' => $subcommandParser
-			));
+			]);
 	}
 
 }
