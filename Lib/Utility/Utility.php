@@ -783,4 +783,34 @@ class Utility {
 		return str_replace('~~PRETTY_JSON_QUOTEMARK~~', '\"', $result);
 	}
 
+	/**
+     * Creates a grammatically proper comma-separated string from an array
+     *
+     * @param array $arr
+     * @param bool $and (optional)
+     * @return string
+     */
+    public function commaList($arr, $and = true)
+    {
+        $arr = array_filter($arr, function ($value) {
+            return !is_null($value) && $value !== '';
+        });
+        $str = '';
+        $i = 0;
+        $last = count($arr);
+        foreach ($arr as $item) {
+            if (++$i > 1) {
+                if ($last != 2) {
+                    $str .= ',';
+                }
+                $str .= ' ';
+                if ($and && $i == $last) {
+                    $str .= 'and ';
+                }
+            }
+            $str .= $item;
+        }
+        return $str;
+    }
+
 }
