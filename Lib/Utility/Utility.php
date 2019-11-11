@@ -790,7 +790,7 @@ class Utility {
      * @param bool $and (optional)
      * @return string
      */
-    public function commaList($arr, $and = true)
+    public static function commaList($arr, $and = true)
     {
         $arr = array_filter($arr, function ($value) {
             return !is_null($value) && $value !== '';
