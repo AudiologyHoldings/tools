@@ -646,6 +646,11 @@ class GeocodeLib {
 			$res['route'] = '';
 		}
 
+		// Compensate for city may be in political main type (see Bronx, Ny and zips like 10467)
+		if (array_key_exists('political', $components) && in_array('sublocality', $components['political']['types'])) {
+			$res['sublocality'] = $components['political']['name'];
+		}
+
 		// determine accuracy types
 		if (array_key_exists('types', $record)) {
 			$res['types'] = $record['types'];
